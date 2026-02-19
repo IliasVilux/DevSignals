@@ -12,3 +12,29 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum RemoteType {
+  ONSITE
+  HYBRID
+  REMOTE
+}
+
+model Country {
+  id       String   @id @default(cuid())
+  name     String   @unique
+  code     String   @unique
+  jobs     Job[]
+}
+
+model Job {
+  id          String     @id @default(cuid())
+  role        String
+  company     String?
+  salaryMin   Int?
+  salaryMax   Int?
+  remoteType  RemoteType
+  postedAt    DateTime
+  country     Country    @relation(fields: [countryId], references: [id])
+  countryId   String
+  createdAt   DateTime   @default(now())
+}

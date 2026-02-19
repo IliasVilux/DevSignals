@@ -2,7 +2,9 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "scripts": {},
+  "scripts": {
+    "prisma:seed": "pnpm exec tsx prisma/seed.ts"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -15,6 +17,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.4.0",
     "@prisma/client": "^7.4.0",
     "dotenv": "^17.3.1",
     "pg": "^8.18.0"
