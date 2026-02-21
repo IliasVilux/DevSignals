@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "prisma:seed": "pnpm exec tsx prisma/seed.ts"
+    "prisma:push": "pnpm prisma db push",
+    "prisma:seed": "pnpm exec tsx prisma/seed.ts",
+    "ingest": "tsx src/ingestion/ingest-jobs.ts"
   },
   "keywords": [],
   "author": "",

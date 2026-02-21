@@ -28,6 +28,7 @@ model Country {
 
 model Job {
   id          String     @id @default(cuid())
+  externalId  String
   role        String
   company     String?
   salaryMin   Int?
@@ -37,4 +38,6 @@ model Job {
   country     Country    @relation(fields: [countryId], references: [id])
   countryId   String
   createdAt   DateTime   @default(now())
+
+  @@unique([externalId, countryId])
 }
