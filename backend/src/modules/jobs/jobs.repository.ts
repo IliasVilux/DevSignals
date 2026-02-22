@@ -14,17 +14,25 @@ export class JobsRepository {
         const countryMap = new Map(
             countries.map(c => [c.code, c.id])
         );
+        
 
-        const data = jobs.map(j => ({
-            externalId: j.externalId,
-            role: j.role,
-            company: j.company ?? null,
-            salaryMin: j.salaryMin ?? null,
-            salaryMax: j.salaryMax ?? null,
-            remoteType: j.remoteType,
-            postedAt: j.postedAt,
-            countryId: countryMap.get(j.countryCode)!
-        }))
+        const data = jobs.map(j => {
+            const countryId = countryMap.get(j.countryCode);
+            if (!countryId) {
+                throw new Error(`Country code ${j.countryCode} not found in database`);
+            }
+            
+            return {
+                externalId: j.externalId,
+                role: j.role,
+                company: j.company ?? null,
+                salaryMin: j.salaryMin ?? null,
+                salaryMax: j.salaryMax ?? null,
+                remoteType: j.remoteType,
+                postedAt: j.postedAt,
+                countryId: countryMap.get(j.countryCode)!
+            }
+        })
 
         return prisma.job.createMany({
             data,

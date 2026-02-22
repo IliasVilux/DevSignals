@@ -5,7 +5,9 @@
   "scripts": {
     "prisma:push": "pnpm prisma db push",
     "prisma:seed": "pnpm exec tsx prisma/seed.ts",
-    "ingest": "tsx src/ingestion/ingest-jobs.ts"
+    "ingest": "tsx src/ingestion/ingest-jobs.ts",
+    "test": "vitest",
+    "test:watch": "vitest --watch"
   },
   "keywords": [],
   "author": "",
@@ -16,7 +18,8 @@
     "@types/pg": "^8.16.0",
     "prisma": "^7.4.0",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.4.0",
