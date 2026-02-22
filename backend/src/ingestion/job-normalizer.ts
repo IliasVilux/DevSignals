@@ -1,16 +1,6 @@
 import { RemoteType } from "@prisma/client";
 import { AdzunaJobRaw } from "./adzuna.client";
-
-export interface NormalizedJob {
-    externalId: string;
-    role: string;
-    company?: string;
-    salaryMin?: number | null;
-    salaryMax?: number | null;
-    remoteType: RemoteType;
-    postedAt: Date;
-    countryCode: string;
-}
+import { NormalizedJob } from "../modules/jobs/jobs.types";
 
 function detectRemoteType(description: string): RemoteType {
   const lower = description.toLowerCase();

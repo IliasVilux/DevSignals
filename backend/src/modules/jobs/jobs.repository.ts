@@ -1,5 +1,5 @@
 import { prisma } from "../../lib/prisma";
-import { NormalizedJob } from "../../ingestion/job-normalizer";
+import { NormalizedJob } from "./jobs.types";
 
 export class JobsRepository {
     async createMany(jobs: NormalizedJob[]) {
