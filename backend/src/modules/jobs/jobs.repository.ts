@@ -1,7 +1,12 @@
 import { prisma } from "../../lib/prisma";
 import { NormalizedJob } from "./jobs.types";
+import { Job } from "@prisma/client";
 
-export class JobsRepository {
+export interface IJobsRepository {
+  findJobs(filters?: any): Promise<any[]>;
+}
+
+export class JobsRepository implements IJobsRepository {
     async createMany(jobs: NormalizedJob[]) {
         if (jobs.length === 0) return;
 
@@ -37,6 +42,18 @@ export class JobsRepository {
         return prisma.job.createMany({
             data,
             skipDuplicates: true
+        })
+    }
+
+    async findJobs(filters: { countryCode?: string; role?: string }): Promise<Job[]> {
+        return prisma.job.findMany({
+            where: {
+                country: filters.countryCode ? { code: filters.countryCode } : undefined,
+                role: filters.role ? { contains: filters.role, mode: "insensitive" } : undefined,
+            },
+            include: {
+                country: true
+            }
         })
     }
 }
