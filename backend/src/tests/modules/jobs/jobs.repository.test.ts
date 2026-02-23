@@ -27,6 +27,7 @@ describe("JobsRepository", () => {
             {
                 externalId: "123",
                 role: "Software Engineer",
+                description: "This is a software engineering job at Tech Co.",
                 company: "Tech Co",
                 salaryMin: 50000,
                 salaryMax: 100000,

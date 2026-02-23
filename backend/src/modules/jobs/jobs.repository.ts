@@ -1,9 +1,10 @@
 import { prisma } from "../../lib/prisma";
+import { MarketOverviewFilters } from "../market/market.types";
 import { NormalizedJob } from "./jobs.types";
 import { Job } from "@prisma/client";
 
 export interface IJobsRepository {
-  findJobs(filters?: any): Promise<any[]>;
+  findJobs(filters?: MarketOverviewFilters): Promise<Job[]>;
 }
 
 export class JobsRepository implements IJobsRepository {
@@ -30,6 +31,7 @@ export class JobsRepository implements IJobsRepository {
             return {
                 externalId: j.externalId,
                 role: j.role,
+                description: j.description ?? null,
                 company: j.company ?? null,
                 salaryMin: j.salaryMin ?? null,
                 salaryMax: j.salaryMax ?? null,
@@ -45,11 +47,11 @@ export class JobsRepository implements IJobsRepository {
         })
     }
 
-    async findJobs(filters: { countryCode?: string; role?: string }): Promise<Job[]> {
+    async findJobs(filters: MarketOverviewFilters): Promise<Job[]> {
         return prisma.job.findMany({
             where: {
-                country: filters.countryCode ? { code: filters.countryCode } : undefined,
-                role: filters.role ? { contains: filters.role, mode: "insensitive" } : undefined,
+                country: filters.countryCode ? { code: filters.countryCode.toUpperCase() } : undefined,
+                role: filters.role ? { contains: filters.role.toLowerCase(), mode: "insensitive" } : undefined,
             },
             include: {
                 country: true

@@ -6,7 +6,7 @@ describe("normalizeJob", () => {
     const baseRawJob = {
         id: "123",
         title: "Software Engineer",
-        description: "",
+        description: "This is a software engineering job at Tech Co.",
         created: "2024-01-01T00:00:00Z",
         company: { display_name: "Tech Co" },
         salary_min: 50000,
@@ -17,6 +17,7 @@ describe("normalizeJob", () => {
         const normalized = normalizeJob(baseRawJob, "US");
         expect(normalized.externalId).toBe("123");
         expect(normalized.role).toBe("Software Engineer");
+        expect(normalized.description).toBe("This is a software engineering job at Tech Co.");
         expect(normalized.company).toBe("Tech Co");
         expect(normalized.salaryMin).toBe(50000);
         expect(normalized.salaryMax).toBe(100000);
@@ -38,9 +39,10 @@ describe("normalizeJob", () => {
     })
 
     it("handles missing optional fields", () => {
-        const minimalJob = normalizeJob({ ...baseRawJob, company: undefined, salary_min: undefined, salary_max: undefined }, "US");
+        const minimalJob = normalizeJob({ ...baseRawJob, company: undefined, salary_min: undefined, salary_max: undefined, description: undefined }, "US");
         expect(minimalJob.externalId).toEqual("123");
         expect(minimalJob.role).toEqual("Software Engineer");
+        expect(minimalJob.description).toBeUndefined();
         expect(minimalJob.company).toBeUndefined();
         expect(minimalJob.salaryMin).toBeNull();
         expect(minimalJob.salaryMax).toBeNull();

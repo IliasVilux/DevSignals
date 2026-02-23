@@ -15,10 +15,11 @@ export function normalizeJob(raw: AdzunaJobRaw, countryCode: string): Normalized
     return {
         externalId: raw.id,
         role: raw.title,
+        description: raw.description,
         company: raw.company?.display_name,
         salaryMin: raw.salary_min ?? null,
         salaryMax: raw.salary_max ?? null,
-        remoteType: detectRemoteType(raw.description),
+        remoteType: detectRemoteType(raw.description ?? ""),
         postedAt: new Date(raw.created),
         countryCode,
     }
