@@ -7,13 +7,15 @@
     "prisma:seed": "pnpm exec tsx prisma/seed.ts",
     "ingest": "tsx src/ingestion/ingest-jobs.ts",
     "test": "vitest",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "dev": "tsx watch src/server.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/node": "^25.2.3",
     "@types/pg": "^8.16.0",
     "prisma": "^7.4.0",
@@ -25,6 +27,7 @@
     "@prisma/adapter-pg": "^7.4.0",
     "@prisma/client": "^7.4.0",
     "dotenv": "^17.3.1",
+    "express": "^5.2.1",
     "pg": "^8.18.0"
   }
 }

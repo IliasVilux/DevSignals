@@ -14,4 +14,5 @@ export const env = {
   DATABASE_URL: getEnv("DATABASE_URL"),
   ADZUNA_API_KEY: getEnv("ADZUNA_API_KEY"),
   ADZUNA_APP_ID: getEnv("ADZUNA_APP_ID"),
+  PORT: getEnv("PORT"),
 };
