@@ -41,4 +41,6 @@ model Job {
   createdAt   DateTime   @default(now())
 
   @@unique([externalId, countryId])
+  @@index([countryId, role])
+  @@index([postedAt])
 }
