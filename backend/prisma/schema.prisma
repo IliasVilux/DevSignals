@@ -30,6 +30,7 @@ model Job {
   id          String     @id @default(cuid())
   externalId  String
   role        String
+  description String?
   company     String?
   salaryMin   Int?
   salaryMax   Int?

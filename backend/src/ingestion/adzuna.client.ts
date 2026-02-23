@@ -20,7 +20,7 @@ interface AdCompany {
 export interface AdzunaJobRaw {
     id: string;
     title: string;
-    description: string;
+    description?: string;
     created: string;
     redirect_url?: string;
     adref?: string;

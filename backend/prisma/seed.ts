@@ -6,7 +6,7 @@ async function main() {
         { name: "France", code: "FR" },
         { name: "Germany", code: "DE" },
         { name: "Italy", code: "IT" },
-        { name: "United Kingdom", code: "UK" },
+        { name: "United Kingdom", code: "GB" },
     ];
     for (const country of countries) {
         await prisma.country.upsert({
