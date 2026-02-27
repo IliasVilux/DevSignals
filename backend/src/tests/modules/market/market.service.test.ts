@@ -1,7 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { describe, it, expect, vi } from "vitest"
 import { MarketService } from "../../../modules/market/market.service"
 import { RemoteType } from "@prisma/client"
-import { mock } from "node:test";
 
 describe("MarketService", () => {
     const mockJobs = [
@@ -45,7 +44,8 @@ describe("MarketService", () => {
 
     it("returns empty overview when no jobs found", async () => {
         const mockRepository = {
-            findJobs: vi.fn().mockResolvedValue([])
+            findJobs: vi.fn().mockResolvedValue([]),
+            findTopRoles: vi.fn().mockResolvedValue([])
         }
         const service = new MarketService(mockRepository);
         const result = await service.getMarketOverview({});
@@ -58,12 +58,14 @@ describe("MarketService", () => {
                 hybrid: 0,
                 onSite: 0,
             },
+            topRoles: [],
         });
     })
 
     it("calculates avarage salary correctly", async () => {
         const mockRepository = {
-            findJobs: vi.fn().mockResolvedValue(mockJobs)
+            findJobs: vi.fn().mockResolvedValue(mockJobs),
+            findTopRoles: vi.fn().mockResolvedValue([])
         }
 
         const service = new MarketService(mockRepository);
@@ -87,7 +89,8 @@ describe("MarketService", () => {
             createdAt: new Date(),
         }];
         const mockRepository = {
-            findJobs: vi.fn().mockResolvedValue(extendedMockJobs)
+            findJobs: vi.fn().mockResolvedValue(extendedMockJobs),
+            findTopRoles: vi.fn().mockResolvedValue([])
         }
 
         const service = new MarketService(mockRepository);
@@ -99,5 +102,30 @@ describe("MarketService", () => {
             hybrid: 25,
             onSite: 25,
         });
-    })
-})
+    });
+
+    it("returns top roles normalized (same role in different casing counts as one)", async () => {
+        const jobsWithSameRole = [
+            { ...mockJobs[0], role: "Software Engineer" },
+            { ...mockJobs[1], role: "software engineer" },
+            { ...mockJobs[2], role: "Frontend Dev" },
+        ];
+
+        const mockRepository = {
+            findJobs: vi.fn().mockResolvedValue(jobsWithSameRole),
+            findTopRoles: vi.fn().mockResolvedValue([
+                { role: "Software Engineer", count: 2 },
+                { role: "Frontend Dev", count: 1 }
+            ])
+        }
+        const service = new MarketService(mockRepository);
+        const result = await service.getMarketOverview({});
+
+        expect(result.topRoles).toHaveLength(2);
+        const softwareEngineer = result.topRoles.find((r) => r.role.toLowerCase() === "software engineer");
+        const frontendDev = result.topRoles.find((r) => r.role.toLowerCase() === "frontend dev");
+        expect(softwareEngineer?.count).toBe(2);
+        expect(frontendDev?.count).toBe(1);
+        expect(result.topRoles[0].count).toBeGreaterThanOrEqual(result.topRoles[1].count);
+    });
+});

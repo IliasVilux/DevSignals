@@ -11,3 +11,8 @@ export interface NormalizedJob {
     postedAt: Date;
     countryCode: string;
 }
+
+export interface TopRoles {
+    role: string;
+    count: number;
+}
