@@ -20,6 +20,7 @@ export class MarketService {
                     hybrid: 0,
                     onSite: 0,
                 },
+                topRoles: [],
             };
         }
 
@@ -38,6 +39,8 @@ export class MarketService {
         const hybridCount = jobs.filter(j => j.remoteType === RemoteType.HYBRID).length;
         const onSiteCount = jobs.filter(j => j.remoteType === RemoteType.ONSITE).length;
 
+        const topRoles = await this.jobsRepository.findTopRoles(filters, 5);
+
         return {
             totalJobs,
             averageSalary: avgSalary,
@@ -46,6 +49,9 @@ export class MarketService {
                 hybrid: Math.round((hybridCount / totalJobs) * 100),
                 onSite: Math.round((onSiteCount / totalJobs) * 100),
             },
+            topRoles,
         };
     }
+
+    
 }

@@ -1,10 +1,12 @@
 import { prisma } from "../../lib/prisma";
 import { MarketOverviewFilters } from "../market/market.types";
-import { NormalizedJob } from "./jobs.types";
+import { NormalizedJob, TopRoles } from "./jobs.types";
 import { Job } from "@prisma/client";
+import { getTopRoles } from "../../../generated/prisma/sql"
 
 export interface IJobsRepository {
   findJobs(filters?: MarketOverviewFilters): Promise<Job[]>;
+  findTopRoles(filters: MarketOverviewFilters, limit: number): Promise<TopRoles[]>;
 }
 
 export class JobsRepository implements IJobsRepository {
@@ -57,5 +59,13 @@ export class JobsRepository implements IJobsRepository {
                 country: true
             }
         })
+    }
+
+    async findTopRoles(filters: MarketOverviewFilters, limit: number): Promise<TopRoles[]> {
+        const countryParam = filters.countryCode ? filters.countryCode.toUpperCase() : null;
+        const roleParam = filters.role ?? null;
+
+        const rows = await prisma.$queryRawTyped(getTopRoles(countryParam, roleParam, limit))
+        return rows
     }
 }
