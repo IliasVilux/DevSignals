@@ -56,7 +56,7 @@ describe("MarketService", () => {
             remoteDistribution: {
                 remote: 0,
                 hybrid: 0,
-                onSite: 0,
+                onsite: 0,
             },
             topRoles: [],
         });
@@ -100,7 +100,7 @@ describe("MarketService", () => {
         expect(result.remoteDistribution).toEqual({
             remote: 50,
             hybrid: 25,
-            onSite: 25,
+            onsite: 25,
         });
     });
 

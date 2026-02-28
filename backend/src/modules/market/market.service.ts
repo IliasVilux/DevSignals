@@ -18,7 +18,7 @@ export class MarketService {
                 remoteDistribution: {
                     remote: 0,
                     hybrid: 0,
-                    onSite: 0,
+                    onsite: 0,
                 },
                 topRoles: [],
             };
@@ -37,7 +37,7 @@ export class MarketService {
 
         const remoteCount = jobs.filter( j => j.remoteType === RemoteType.REMOTE).length;
         const hybridCount = jobs.filter(j => j.remoteType === RemoteType.HYBRID).length;
-        const onSiteCount = jobs.filter(j => j.remoteType === RemoteType.ONSITE).length;
+        const onsiteCount = jobs.filter(j => j.remoteType === RemoteType.ONSITE).length;
 
         const topRoles = await this.jobsRepository.findTopRoles(filters, 5);
 
@@ -47,7 +47,7 @@ export class MarketService {
             remoteDistribution: {
                 remote: Math.round((remoteCount / totalJobs) * 100),
                 hybrid: Math.round((hybridCount / totalJobs) * 100),
-                onSite: Math.round((onSiteCount / totalJobs) * 100),
+                onsite: Math.round((onsiteCount / totalJobs) * 100),
             },
             topRoles,
         };

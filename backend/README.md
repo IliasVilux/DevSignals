@@ -80,7 +80,7 @@ Salary aggregation uses `salaryMin`/`salaryMax`: when both exist we use the midp
 
 - `totalJobs: number`
 - `averageSalary: number | null` (null when no jobs)
-- `remoteDistribution: { remote: number, hybrid: number, onSite: number }` (percentages 0–100, rounded)
+- `remoteDistribution: { remote: number, hybrid: number, onsite: number }` (percentages 0–100, rounded)
 - `topRoles: { role: string, count: number }[]` (top 5 roles by count, normalized in DB)
 
 Omission of both filters returns an overview over all jobs in the database.
