@@ -37,6 +37,12 @@ Separation is strict: controllers and services use **typed DTOs** (e.g. `MarketO
 - **Single Prisma client**  
   One shared client in `src/lib/prisma.ts` (with `PrismaPg` adapter). No per-request instantiation. Simple and sufficient for current scale; a future multi-tenant or serverless design could introduce scoped clients if needed.
 
+- **CORS**  
+  The `cors` middleware allows requests from the frontend (e.g. `http://localhost:5173` in dev, Vercel URL in production). Configured in `src/app.ts` with an allowed-origins list.
+
+- **Prisma TypedSQL for top roles**  
+  Top roles aggregation is done in the database via a custom SQL query (`prisma/sql/getTopRoles.sql`). Prisma’s `typedSql` preview feature generates typed bindings; `JobsRepository.findTopRoles` uses `prisma.$queryRawTyped(getTopRoles(...))`. Roles are grouped by `lower(trim(role))` so "Software Engineer" and "software engineer" count as one. Keeps heavy aggregation in the DB instead of loading all jobs into memory.
+
 - **Environment validation at startup**  
   `src/config/env.ts` reads and validates required env vars once. The app fails fast at boot if `DATABASE_URL`, `ADZUNA_APP_ID`, `ADZUNA_API_KEY`, or `PORT` are missing—no silent runtime failures.
 
@@ -75,8 +81,26 @@ Salary aggregation uses `salaryMin`/`salaryMax`: when both exist we use the midp
 - `totalJobs: number`
 - `averageSalary: number | null` (null when no jobs)
 - `remoteDistribution: { remote: number, hybrid: number, onSite: number }` (percentages 0–100, rounded)
+- `topRoles: { role: string, count: number }[]` (top 5 roles by count, normalized in DB)
 
 Omission of both filters returns an overview over all jobs in the database.
+
+---
+
+**`GET /api/countries`**
+
+**Response 200** – `Country[]`: `{ id, code, name }[]`
+
+---
+
+**`GET /api/countries/:code`**
+
+| Path param | Description        |
+|------------|--------------------|
+| `code`     | Country code (e.g. `GB`, `ES`) |
+
+**Response 200** – `Country`: `{ id, code, name }`  
+**Response 404** – `{ error: "Country not found" }`
 
 ---
 
@@ -84,6 +108,8 @@ Omission of both filters returns an overview over all jobs in the database.
 
 - Node.js, Express 5, TypeScript
 - Prisma ORM with PostgreSQL (Prisma Pg adapter)
+- Prisma TypedSQL (`previewFeatures = ["typedSql"]`) for type-safe raw SQL
+- CORS middleware for cross-origin requests from frontend
 - Vitest for testing
 - `tsx` for TypeScript execution in dev
 - `dotenv` for configuration
@@ -108,9 +134,11 @@ backend/
   vitest.config.ts
   prisma.config.ts
   prisma/
+    sql/
+      getTopRoles.sql   # TypedSQL query: top N roles by count, grouped by lower(trim(role))
     schema.prisma       # Database schema (Job, Country, etc.)
     seed.ts             # Seed script to seed the database with some countries
-  generated/prisma/     # Generated Prisma client and types
+  generated/prisma/     # Generated Prisma client and types (incl. sql bindings)
   src/
     app.ts              # Express app: JSON middleware + route mounting
     server.ts           # Server bootstrap: reads env + listens on PORT
@@ -119,10 +147,13 @@ backend/
     lib/
       prisma.ts         # Prisma client instance
     routes/
-      market.routes.ts  # /api/market routes → market controller
+      market.routes.ts   # /api/market routes → market controller
+      countries.routes.ts # /api/countries routes → countries controller
     modules/
       countries/
+        countries.controller.ts
         countries.repository.ts
+        countries.service.ts
         countries.types.ts
       jobs/
         jobs.repository.ts
@@ -149,8 +180,9 @@ backend/
 
 1. **Express app setup** – `src/app.ts`
    - Creates an `express()` app
+   - Enables CORS for frontend origins (`http://localhost:5173`, Vercel URL)
    - Uses `express.json()`
-   - Mounts `marketRoutes` under `/api/market`
+   - Mounts `marketRoutes` under `/api/market`, `countriesRoutes` under `/api/countries`
 
 2. **HTTP server bootstrap** – `src/server.ts`
    - Imports `env` from `src/config/env.ts` to get `PORT`
@@ -167,19 +199,30 @@ backend/
 
 5. **Service layer** – `src/modules/market/market.service.ts`
    - Core **aggregation logic**
-   - Talks to `JobsRepository` and `CountriesRepository`
-   - Computes:
-     - total job count
-     - average salary
-     - remote / hybrid / onsite percentages
-     - (future) top technologies
+   - Uses `JobsRepository.findJobs` for total count, salary, remote distribution
+   - Uses `JobsRepository.findTopRoles` for top 5 roles (TypedSQL in DB)
+   - Returns `MarketOverview` with all fields
 
 6. **Repository layer** – `src/modules/*/*.repository.ts`
-   - Uses Prisma client (`src/lib/prisma.ts`)
-   - Encapsulates queries against `Job` and `Country` tables
-   - Keeps raw DB details out of controllers/services
+   - `JobsRepository`: `findJobs` (Prisma `findMany`), `findTopRoles` (Prisma `$queryRawTyped` with `getTopRoles.sql`)
+   - `CountriesRepository`: `getAllCountries`, `findByCode`
+   - All persistence behind these interfaces
 
-### 2. Ingestion Pipeline
+### 2. API Request → Countries
+
+1. **Route** – `src/routes/countries.routes.ts`  
+   `GET /` → `CountriesController.getAllCountries`; `GET /:code` → `CountriesController.getCountryByCode`.
+
+2. **Controller** – `src/modules/countries/countries.controller.ts`  
+   Delegates to `CountriesService`; returns JSON or 404 for by-code when not found.
+
+3. **Service** – `src/modules/countries/countries.service.ts`  
+   Uses `CountriesRepository.getAllCountries()` or `findByCode(code)`.
+
+4. **Repository** – `src/modules/countries/countries.repository.ts`  
+   Prisma `findMany` / `findUnique` on `Country` table.
+
+### 3. Ingestion Pipeline
 
 1. **Adzuna client** – `src/ingestion/adzuna.client.ts`
    - Calls Adzuna API using credentials from environment
@@ -213,7 +256,7 @@ backend/
   Repository methods tested with Prisma mocks (or test doubles). Validates that the right queries and data shapes are used; no live DB required.
 
 - **Service** – `src/tests/modules/market/market.service.test.ts`  
-  `MarketService` receives a mock `IJobsRepository` that returns fixed `Job[]`. Tests assert: empty jobs → zero overview; salary aggregation (min/max midpoint, single value, null handling); remote distribution percentages. All aggregation logic covered without touching the database.
+  `MarketService` receives a mock `IJobsRepository` with `findJobs` and `findTopRoles`. Tests assert: empty jobs → zero overview; salary aggregation; remote distribution; top roles from repository. All aggregation logic covered without touching the database.
 
 ---
 
@@ -243,6 +286,7 @@ pnpm install
      - `ADZUNA_APP_ID`
      - `ADZUNA_API_KEY`
      - `PORT`
+   - CORS allowed origins are set in `src/app.ts`; update the list when deploying (e.g. add your Vercel URL).
 
 3. Apply schema and seed data:
 

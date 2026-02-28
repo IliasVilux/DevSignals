@@ -34,13 +34,16 @@ Right now the focus is on a **clean, testable analytics backend**:
     - Total jobs analyzed
     - Average salary
     - Remote / Hybrid / Onsite distribution
-    - (Planned) top technologies
+    - Top 5 roles (aggregated in DB via Prisma TypedSQL)
+- `GET /api/countries` – list all countries (`{ id, code, name }[]`)
+- `GET /api/countries/:code` – get country by code (e.g. `GB`, `ES`)
 
 ## High-Level Backend Architecture
 
-- **Express app** (`backend/src/app.ts`) exposes REST routes
+- **Express app** (`backend/src/app.ts`) exposes REST routes, CORS enabled for frontend origins
 - **Market module** (`backend/src/modules/market`) handles analytics queries
-- **Jobs + Countries modules** wrap database access via Prisma
+- **Countries module** (`backend/src/modules/countries`) – Controller → Service → Repository for country data
+- **Jobs module** wraps database access via Prisma; top roles via custom TypedSQL query
 - **Ingestion layer** (`backend/src/ingestion`) pulls and normalizes external job data
 - **Prisma + PostgreSQL** provide typed, relational persistence
 
