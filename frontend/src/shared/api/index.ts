@@ -1,5 +1,5 @@
 import { apiFetch } from "./client"
-import type { GetMarketOverviewParams, MarketOverview } from "./types"
+import type { GetMarketOverviewParams, MarketOverview, Country } from "./types"
 
 export function getMarketOverview(params: GetMarketOverviewParams = {}): Promise<MarketOverview> {
     const queryParams = new URLSearchParams()
@@ -15,4 +15,8 @@ export function getMarketOverview(params: GetMarketOverviewParams = {}): Promise
     const query = queryParams.toString() ? `?${queryParams.toString()}` : ''
 
     return apiFetch<MarketOverview>(`/api/market/overview${query}`)
+}
+
+export function getCountries(): Promise<Country[]> {
+    return apiFetch<Country[]>('/api/countries')
 }
