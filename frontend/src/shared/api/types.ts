@@ -20,3 +20,9 @@ export type GetMarketOverviewParams = {
   countryCode?: string
   role?: string
 }
+
+export type Country = {
+  id: string
+  code: string
+  name: string
+}
