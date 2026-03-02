@@ -67,14 +67,24 @@ src/
 │       │   └── MarketOverviewPage.tsx     # Main analytics dashboard
 │       └── index.ts                       # Feature public exports
 │
-└── shared/
-    ├── api/
-    │   ├── client.ts           # Fetch abstraction (base URL, error handling)
-    │   ├── index.ts            # Domain endpoint functions
-    │   └── types.ts            # Shared frontend domain types
-    └── hooks/
-        ├── index.ts            # Shared hook exports
-        └── useDebounce.ts      # Debounce utility for input performance
+├── shared/
+│   ├── api/
+│   │   ├── client.ts           # Fetch abstraction (base URL, error handling)
+│   │   ├── index.ts            # Domain endpoint functions
+│   │   └── types.ts            # Shared frontend domain types
+│   └── hooks/
+│       ├── index.ts            # Shared hook exports
+│       └── useDebounce.ts      # Debounce utility for input performance
+│
+└── tests/
+    ├── hooks/
+    │   ├── useDebounce.test.ts           # Timing and debounce behavior
+    │   ├── useCountries.test.tsx         # Fetch, loading, error states
+    │   └── useMarketOverview.test.tsx    # Fetch, loading, error, filter reactivity
+    ├── mocks/
+    │   ├── handlers.ts                   # MSW mock API handlers
+    │   └── server.ts                     # MSW node server setup
+    └── setup.ts                          # MSW server lifecycle + jest-dom setup
 ```
 
 ---
@@ -158,9 +168,26 @@ Make sure the backend is running and accessible at the configured base URL.
 
 ---
 
+## Testing Strategy
+
+**Philosophy:** Hooks are tested in isolation using MSW to intercept network requests at the fetch level. This keeps tests decoupled from implementation details — if the API client changes internally, the tests remain valid because they test behavior, not internals.
+
+**Stack:** Vitest + React Testing Library + MSW
+
+- **`useDebounce`** — `src/tests/hooks/useDebounce.test.ts`  
+  Pure timing tests using `vi.useFakeTimers()`: initial value returned immediately, value not updated before delay, value updated after delay, delay resets if value changes before expiry.
+
+- **`useCountries`** — `src/tests/hooks/useCountries.test.tsx`  
+  Hook tested with `QueryClientProvider` wrapper and MSW handler. Covers: loading state on mount, successful data return, error state when API fails.
+
+- **`useMarketOverview`** — `src/tests/hooks/useMarketOverview.test.tsx`  
+  Same pattern as `useCountries` plus a filter change test: verifies that changing `countryCode` triggers a new fetch and returns different data, confirming the parameter-driven query key works correctly.
+
+---
+
 ## Intentional Simplifications (Current Phase)
 
-- **No frontend tests yet** — React Testing Library will be introduced in a later phase when component contracts stabilize.
+- **No component tests yet** — hooks are covered; React Testing Library component tests will be introduced in a later phase when the UI stabilizes.
 - **No design system** — UI is functional but unstyled beyond basic layout. Visual polish is deferred until the data layer is complete.
 - **No error boundaries** — Basic error states are handled at the hook level; structured error UI is a next step.
 - **Single route** — Routing infrastructure is in place; additional pages will be added as new features are built.
