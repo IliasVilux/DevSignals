@@ -1,73 +1,168 @@
-# React + TypeScript + Vite
+# DevSignals Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend for DevSignals: React + TypeScript + Vite + TanStack Query + Recharts.  
+Goal: a **clean, analytics-oriented frontend** that consumes the backend aggregation API and transforms market data into meaningful developer insights.
 
-Currently, two official plugins are available:
+The focus is architectural correctness over visual polish — demonstrating real-world production engineering patterns for a portfolio context.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## Architecture Overview
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+The frontend follows a **feature-based architecture** that separates application configuration, business domains, and shared utilities.
 
-## Expanding the ESLint configuration
+| Layer | Responsibility |
+|-------|----------------|
+| `app/` | Root composition, global providers, routing |
+| `features/` | Domain-scoped components, hooks, and pages |
+| `shared/` | Cross-feature API client, types, and utility hooks |
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Design Decisions & Rationale
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- **Feature-based structure**  
+  All market-related code (components, hooks, pages) lives under `features/market/`. As new domains are added (e.g. skills, trends), they get their own feature folder with the same internal structure. No shared component soup.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- **Centralized API client**  
+  `shared/api/client.ts` is the single place where fetch logic lives. Domain endpoints are registered in `shared/api/index.ts`. Components and hooks never call `fetch` directly — this keeps network logic consistent and easy to change.
+
+- **TanStack Query for server state**  
+  React Query manages all data fetching, caching, and background updates. No `useEffect` + `useState` for data fetching. Query keys are parameter-driven so cache invalidation is automatic when filters change.
+
+- **Custom hooks per domain**  
+  `useMarketOverview` and `useCountries` encapsulate query logic. Pages and components consume hooks — they don't own fetch logic. This keeps components clean and hooks independently testable.
+
+- **Debounced role input**  
+  A shared `useDebounce` hook prevents a query from firing on every keystroke. The role filter only updates the query key after the user pauses typing, reducing unnecessary backend load.
+
+- **No global state manager**  
+  Filter state lives as local component state in `MarketOverviewPage`. React Query handles all server state. No Redux, no Zustand — not needed at this scope, and intentionally avoided to keep the stack transparent.
+
+- **Shared domain types**  
+  `shared/api/types.ts` defines the frontend's canonical types (`MarketOverview`, `Country`, etc.). These mirror the backend API contract and are used across hooks and components, ensuring type safety end to end.
+
+---
+
+## Folder Structure
+```
+src/
+├── app/
+│   ├── index.tsx              # Root composition: wraps providers + router
+│   ├── providers.tsx          # Global providers (QueryClientProvider)
+│   └── router.tsx             # React Router route definitions
+│
+├── features/
+│   └── market/
+│       ├── components/
+│       │   ├── index.ts                    # Component exports
+│       │   ├── MarketFilters.tsx           # Country select + role text input
+│       │   ├── RemoteDistributionChart.tsx # Donut chart: remote/hybrid/onsite
+│       │   └── TopRolesChart.tsx           # Horizontal bar chart: top 5 roles
+│       ├── hooks/
+│       │   ├── index.ts                   # Hook exports
+│       │   ├── useCountries.ts            # Fetches country list for filter select
+│       │   └── useMarketOverview.ts       # Fetches market analytics data
+│       ├── pages/
+│       │   └── MarketOverviewPage.tsx     # Main analytics dashboard
+│       └── index.ts                       # Feature public exports
+│
+└── shared/
+    ├── api/
+    │   ├── client.ts           # Fetch abstraction (base URL, error handling)
+    │   ├── index.ts            # Domain endpoint functions
+    │   └── types.ts            # Shared frontend domain types
+    └── hooks/
+        ├── index.ts            # Shared hook exports
+        └── useDebounce.ts      # Debounce utility for input performance
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Current Features
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Market Overview Dashboard (`/market/overview`)
+
+The `MarketOverviewPage` orchestrates the dashboard:
+
+- Manages filter state: selected country and role search input
+- Passes debounced role value to `useMarketOverview` to avoid over-fetching
+- Renders filter controls, stat cards, and chart components
+
+**Filters** (`MarketFilters`)
+- Country dropdown populated dynamically from `GET /api/countries`
+- Role text input with debounce via `useDebounce`
+
+**Stats displayed**
+- Total jobs analyzed
+- Average salary
+- Remote / Hybrid / Onsite distribution (percentages)
+- Top roles
+
+**Charts**
+- `RemoteDistributionChart` — donut chart showing work modality distribution
+- `TopRolesChart` — horizontal bar chart showing top 5 roles by job count
+
+---
+
+## API Contract (Frontend Side)
+
+Consumed from `shared/api/`:
+
+| Endpoint | Hook | Description |
+|----------|------|-------------|
+| `GET /api/market/overview` | `useMarketOverview` | Returns `totalJobs`, `averageSalary`, `remoteDistribution`, `topRoles` |
+| `GET /api/countries` | `useCountries` | Returns `{ id, code, name }[]` for filter select |
+
+Query params forwarded by `useMarketOverview`: `countryCode`, `role` (debounced).
+
+---
+
+## Tech Stack
+
+- React + TypeScript
+- Vite (dev server + build)
+- React Router v6 (client-side routing)
+- TanStack Query v5 (server state, caching, background refetch)
+- Recharts (chart visualizations)
+
+---
+
+## Scripts
+
+From `frontend/`:
+
+- `pnpm dev` — start Vite dev server
+- `pnpm build` — production build
+- `pnpm preview` — preview production build locally
+
+---
+
+## Running Locally
+
+1. Install dependencies (from `frontend/`):
+```bash
+pnpm install
 ```
+
+2. Configure environment:
+   - Create a `.env` file with:
+     - `VITE_API_BASE_URL` — base URL of the backend (e.g. `http://localhost:3000`)
+
+3. Start the dev server:
+```bash
+pnpm dev
+```
+
+Make sure the backend is running and accessible at the configured base URL.
+
+---
+
+## Intentional Simplifications (Current Phase)
+
+- **No frontend tests yet** — React Testing Library will be introduced in a later phase when component contracts stabilize.
+- **No design system** — UI is functional but unstyled beyond basic layout. Visual polish is deferred until the data layer is complete.
+- **No error boundaries** — Basic error states are handled at the hook level; structured error UI is a next step.
+- **Single route** — Routing infrastructure is in place; additional pages will be added as new features are built.
+
+These choices reflect MVP priorities: get the data layer right before investing in UI layer complexity.

@@ -76,7 +76,7 @@ Backend:
 - dotenv configuration
 - Vitest testing
 
-Frontend (later phases):
+Frontend:
 - React
 - TypeScript
 - Vite
@@ -125,6 +125,14 @@ Principles:
 - Clean separation of concerns
 - No premature optimization
 
+Frontend architecture:
+- Feature-based folder structure
+- Custom hooks per domain (useMarketOverview, useCountries)
+- TanStack Query for server state management
+- Recharts for data visualization
+- Debounced inputs to avoid unnecessary API calls
+- Components separated by responsibility (filters, charts, stats)
+
 ---
 
 DATA PIPELINE
@@ -144,7 +152,7 @@ Job Model:
 - company (optional)
 - salaryMin (optional)
 - salaryMax (optional)
-- remoteType (enum)
+- remoteType (enum: REMOTE | HYBRID | ONSITE)
 - postedAt
 - country
 - countryId
@@ -153,28 +161,40 @@ Job Model:
 Unique constraint:
 externalId + countryId
 
+Remote type detection is handled in the normalization layer with improved keyword-based logic covering variations across job descriptions and titles.
+
 ---
 
 CURRENT PHASE
 
-Phase 1 — MVP (Market Overview v0.1)
+Phase 1 — MVP (Market Overview v0.1) — COMPLETED CORE
 
-Focus:
-Build a solid backend foundation and one meaningful analytics endpoint.
-
-Already implemented:
+Backend (fully implemented):
 - Prisma schema
 - Prisma client
 - Job ingestion pipeline
-- Job normalization
+- Job normalization (including improved remoteType detection, onsite normalized to ONSITE)
 - Countries module
 - Jobs module
 - Market module
 - Express configuration
 - GET /api/market/overview endpoint
+- GET /api/countries endpoint
 - Repository tests
 - Market service tests
 - Job normalizer tests
+
+Frontend (fully implemented):
+- Vite + React + TypeScript scaffold
+- App structure with feature-based architecture
+- React Router setup
+- TanStack Query provider
+- Market Overview page (/)
+- useMarketOverview hook (fetches from GET /api/market/overview)
+- useCountries hook (fetches from GET /api/countries, populates country select)
+- Filters: country select (from API), role text input with debounce
+- Stats display: total jobs, average salary, remote/hybrid/onsite percentages
+- Recharts integration: BarChart showing remote type distribution visually
 
 Current API:
 
@@ -184,10 +204,14 @@ Query parameters:
 - role
 
 Returns:
-- Total jobs analyzed
-- Average salary
-- Remote / Hybrid / Onsite percentage
-- (Next step) Top technologies aggregation
+- totalJobs
+- averageSalary
+- remoteDistribution: { remote, hybrid, onsite } (percentages)
+- topRoles
+
+GET /api/countries
+Returns:
+- List of available countries with code and name
 
 Constraints:
 - No authentication
@@ -196,9 +220,6 @@ Constraints:
 - No caching layer yet
 - No background jobs yet
 - Keep architecture simple
-
-Primary objective in this phase:
-Build a clean, reliable, explainable analytics backend.
 
 ---
 
@@ -225,6 +246,8 @@ This project must demonstrate:
 - Type safety
 - Scalable mental models
 - Ability to reason about tradeoffs
+- Frontend data consumption patterns
+- Visualization of analytics data
 
 When possible:
 - Suggest improvements that increase hiring value
@@ -253,20 +276,24 @@ But never overcomplicate the current phase.
 
 ---
 
-FUTURE PHASES (Do Not Implement Yet)
+NEXT LOGICAL STEPS (Not yet implemented)
 
-- Skill extraction and normalization
+- Top technologies / skills aggregation endpoint and visualization
+- Salary breakdown by role chart
 - Time-based trend analysis
+- Loading and error states polish on frontend
+- Empty state handling
+- Skill extraction and normalization
 - Market scoring system
 - Forecasting
 - Caching layer
 - Background job processing
 - Data freshness strategies
 
-Only discuss these if I explicitly move to the next phase.
+Only discuss these if I explicitly ask or move to the next phase.
 
 ---
 
 END OF CONTEXT
 
-Treat this as a real production backend under active development.
+Treat this as a real production backend and frontend under active development.

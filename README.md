@@ -1,6 +1,6 @@
 # DevSignals
 
-DevSignals is a tech job market intelligence platform for developers.  
+DevSignals is a tech job market intelligence platform for developers.
 It does **not** show job listings; it aggregates external job data and turns it into **market insights**.
 
 ## Core Idea
@@ -12,17 +12,28 @@ It does **not** show job listings; it aggregates external job data and turns it 
 
 ## Monorepo Structure
 
-- `backend/` – Node.js + Express + TypeScript + Prisma + PostgreSQL  
-- `frontend/` – (planned) React + TypeScript + Vite  
+- `backend/` – Node.js + Express + TypeScript + Prisma + PostgreSQL
+- `frontend/` – React + TypeScript + Vite + TanStack Query + Recharts
 - `docs/` – project context and architecture notes
 
-## Current Phase – Backend MVP
+## Current Phase – MVP v0.1 (Market Overview)
 
-Right now the focus is on a **clean, testable analytics backend**:
+The backend provides a clean, testable analytics API and the frontend consumes it to display meaningful market insights.
+
+### Backend
 
 - Ingestion pipeline from Adzuna into PostgreSQL via Prisma
-- Normalization of external job data into an internal `Job` model
-- Aggregation logic to expose a **market overview** endpoint
+- Normalization of external job data into an internal `Job` model (including improved remote type detection)
+- Aggregation logic exposed through a market overview endpoint
+
+### Frontend
+
+- Feature-based React + TypeScript architecture
+- TanStack Query for server state management
+- Country select populated dynamically from the API
+- Role text input with debounce to avoid unnecessary requests
+- Stats display: total jobs, average salary, remote/hybrid/onsite percentages and top roles
+- Recharts pie chart visualizing remote type distribution and bar chart for top roles
 
 ### Current API
 
@@ -33,18 +44,26 @@ Right now the focus is on a **clean, testable analytics backend**:
   - Returns:
     - Total jobs analyzed
     - Average salary
-    - Remote / Hybrid / Onsite distribution
-    - Top 5 roles (aggregated in DB via Prisma TypedSQL)
+    - Remote / Hybrid / Onsite distribution (percentages)
+    - Top 5 roles (aggregated via Prisma TypedSQL)
 - `GET /api/countries` – list all countries (`{ id, code, name }[]`)
 - `GET /api/countries/:code` – get country by code (e.g. `GB`, `ES`)
 
-## High-Level Backend Architecture
+## High-Level Architecture
 
+### Backend
 - **Express app** (`backend/src/app.ts`) exposes REST routes, CORS enabled for frontend origins
 - **Market module** (`backend/src/modules/market`) handles analytics queries
-- **Countries module** (`backend/src/modules/countries`) – Controller → Service → Repository for country data
+- **Countries module** (`backend/src/modules/countries`) – Controller → Service → Repository
 - **Jobs module** wraps database access via Prisma; top roles via custom TypedSQL query
 - **Ingestion layer** (`backend/src/ingestion`) pulls and normalizes external job data
 - **Prisma + PostgreSQL** provide typed, relational persistence
 
-For more detail, see `backend/README.md`.
+### Frontend
+- **Feature-based structure** under `frontend/src/features/`
+- **Custom hooks** per domain: `useMarketOverview`, `useCountries`
+- **TanStack Query** manages caching, loading, and error states
+- **Recharts** renders aggregated data as interactive charts
+- **React Router** handles client-side navigation
+
+For more detail, see `backend/README.md` and `frontend/README.md`.

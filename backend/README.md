@@ -128,51 +128,55 @@ From `backend/`:
 
 ## File Structure
 
+```
 backend/
-  package.json
-  tsconfig.json
-  vitest.config.ts
-  prisma.config.ts
-  prisma/
-    sql/
-      getTopRoles.sql   # TypedSQL query: top N roles by count, grouped by lower(trim(role))
-    schema.prisma       # Database schema (Job, Country, etc.)
-    seed.ts             # Seed script to seed the database with some countries
-  generated/prisma/     # Generated Prisma client and types (incl. sql bindings)
-  src/
-    app.ts              # Express app: JSON middleware + route mounting
-    server.ts           # Server bootstrap: reads env + listens on PORT
-    config/
-      env.ts            # Environment loading & validation
-    lib/
-      prisma.ts         # Prisma client instance
-    routes/
-      market.routes.ts   # /api/market routes → market controller
-      countries.routes.ts # /api/countries routes → countries controller
-    modules/
-      countries/
-        countries.controller.ts
-        countries.repository.ts
-        countries.service.ts
-        countries.types.ts
-      jobs/
-        jobs.repository.ts
-        jobs.types.ts
-      market/
-        market.controller.ts
-        market.service.ts
-        market.types.ts
-    ingestion/
-      adzuna.client.ts  # HTTP client for Adzuna API
-      job-normalizer.ts # Map raw Adzuna job → internal Job model
-      ingest-jobs.ts    # Orchestration: fetch → normalize → persist
-    tests/
-      ingestion/
-        job-normalizer.test.ts
-      modules/
-        countries/countries.repository.test.ts
-        jobs/jobs.repository.test.ts
-        market/market.service.test.ts
+├── generated/prisma/              # Generated Prisma client and types (incl. sql bindings)
+├── prisma/
+│   ├── sql/
+│   │   └── getTopRoles.sql        # TypedSQL query: top N roles by count, grouped by lower(trim(role))
+│   ├── schema.prisma              # Database schema (Job, Country, etc.)
+│   └── seed.ts                    # Seed script to seed the database with some countries
+└── src/
+    ├── config/
+    │   └── env.ts                 # Environment loading & validation
+    ├── ingestion/
+    │   ├── remote-classifier/
+    │   │   ├── remote-classifier.ts   # classifyRemoteType: regex + keyword matching → RemoteType enum
+    │   │   └── remote-keywords.ts     # Keyword lists per RemoteType (multilingual: EN, ES, FR, DE, IT)
+    │   ├── adzuna.client.ts           # HTTP client for Adzuna API
+    │   ├── ingest-jobs.ts             # Orchestration: fetch → normalize → persist
+    │   └── job-normalizer.ts          # Map raw Adzuna job → internal Job model
+    ├── lib/
+    │   └── prisma.ts              # Prisma client instance
+    ├── modules/
+    │   ├── countries/
+    │   │   ├── countries.controller.ts
+    │   │   ├── countries.repository.ts
+    │   │   ├── countries.service.ts
+    │   │   └── countries.types.ts
+    │   ├── jobs/
+    │   │   ├── jobs.repository.ts
+    │   │   └── jobs.types.ts
+    │   └── market/
+    │       ├── market.controller.ts
+    │       ├── market.service.ts
+    │       └── market.types.ts
+    ├── routes/
+    │   ├── market.routes.ts       # /api/market routes → market controller
+    │   └── countries.routes.ts    # /api/countries routes → countries controller
+    ├── tests/
+    │   ├── ingestion/
+    │   │   └── job-normalizer.test.ts
+    │   └── modules/
+    │       ├── countries/
+    │       │   └── countries.repository.test.ts
+    │       ├── jobs/
+    │       │   └── jobs.repository.test.ts
+    │       └── market/
+    │           └── market.service.test.ts
+    ├── app.ts                     # Express app: JSON middleware + route mounting
+    └── server.ts                  # Server bootstrap: reads env + listens on PORT
+```
 
 ## Runtime Flow
 
@@ -229,17 +233,18 @@ backend/
    - Returns raw job postings
 
 2. **Normalization** – `src/ingestion/job-normalizer.ts`
-   - Converts external shape → internal `Job` model:
-     - `externalId`
-     - `role`
-     - `description`
-     - `salaryMin` / `salaryMax`
-     - `remoteType` enum
-     - `postedAt`
-     - `country` / `countryId`
-   - Ensures we respect unique constraint on `externalId + countryId`
+   - Converts external shape → internal `NormalizedJob`:
+     - `externalId`, `role`, `description`, `salaryMin` / `salaryMax`, `remoteType`, `postedAt`, `countryCode`
+   - `remoteType` is resolved by `classifyRemoteType(title + description)` — the normalizer never contains classification logic directly
 
-3. **Persistence orchestration** – `src/ingestion/ingest-jobs.ts`
+3. **Remote type classification** – `src/ingestion/remote-classifier/`
+   - `classifyRemoteType(text)` normalizes input (lowercase, collapsed whitespace) then applies two strategies in priority order: regex patterns first (handles morphological variants like `h[ií]brido`, `home\s?office`), then exact keyword lists
+   - Keyword lists in `remote-keywords.ts` cover EN, ES, FR, DE, IT — structured as `Record<RemoteType, string[]>`
+   - HYBRID is checked before REMOTE to avoid misclassifying hybrid descriptions that also contain the word "remote"
+   - ONSITE is the default — no keywords needed, classification falls through
+   - Isolated module: no Express, no Prisma, no ingestion dependencies — purely a text → enum function
+
+4. **Persistence orchestration** – `src/ingestion/ingest-jobs.ts`
    - Coordinates:
      - fetch from Adzuna
      - normalize jobs
@@ -250,7 +255,10 @@ backend/
 **Philosophy:** Unit tests do not hit a real database. Domain and ingestion logic are tested in isolation; repositories are tested with a mocked or in-memory Prisma layer where applicable. This keeps tests fast, deterministic, and focused on behavior rather than infrastructure.
 
 - **Normalizer** – `src/tests/ingestion/job-normalizer.test.ts`  
-  Pure function tests: raw Adzuna payload → `NormalizedJob`; `detectRemoteType` for "remote", "hybrid", default onsite. No I/O.
+  Pure function tests: raw Adzuna payload → `NormalizedJob`; verifies field mapping, salary handling, and that `classifyRemoteType` is called with the combined title + description text. Remote classification logic is tested separately via the classifier's own test suite.
+
+- **Remote classifier** – `src/tests/ingestion/remote-classifier.test.ts`  
+  Pure function tests for `classifyRemoteType`: covers regex variants (multilingual hybrid/remote patterns), keyword matching across supported languages, HYBRID-before-REMOTE priority, empty/null input defaulting to ONSITE. No I/O.
 
 - **Repository** – `src/tests/modules/countries/`, `jobs/`  
   Repository methods tested with Prisma mocks (or test doubles). Validates that the right queries and data shapes are used; no live DB required.
