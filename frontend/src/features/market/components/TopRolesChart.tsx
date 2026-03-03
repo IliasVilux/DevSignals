@@ -1,48 +1,56 @@
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    ResponsiveContainer,
 } from "recharts"
 import type { TopRoles } from "../../../shared/api/types"
 
 type Props = {
-  data: TopRoles[]
+    data: TopRoles[]
 }
 
 export function TopRolesChart({ data }: Props) {
-  return (
-    <div
-      style={{
-        width: "100%",
-        display: "flex",
-        justifyContent: "center",
-      }}
-    >
-      <BarChart
-        data={data}
-        layout="vertical"
-        style={{
-          width: "100%",
-          maxWidth: "700px",
-          height: 350,
-        }}
-        responsive
-        margin={{ top: 20, right: 30, left: 40, bottom: 20 }}
-      >
-        <XAxis type="number" />
-        <YAxis
-          type="category"
-          dataKey="role"
-          width={200}
-        />
-
-        <Bar
-          dataKey="count"
-          fill="#3b82f6"
-          radius={[0, 2, 2, 0]}
-        />
-      </BarChart>
-    </div>
-  )
+    return (
+        <ResponsiveContainer width="100%" height={data.length * 60}>
+            <BarChart
+                data={data}
+                layout="vertical"
+                margin={{ top: 16, right: 48, bottom: 0, left: 0 }}
+                barSize={25}
+            >
+                <XAxis type="number" hide />
+                <YAxis
+                    type="category"
+                    dataKey="role"
+                    tick={({ x, y, payload }) => (
+                        <text
+                            x={0}
+                            y={y}
+                            dy={3}
+                            fill="oklch(0.705 0.015 286.067)"
+                            fontSize={12}
+                            textAnchor="start"
+                        >
+                            {payload.value.length > 30 ? `${payload.value.slice(0, 30)}…` : payload.value}
+                        </text>
+                    )}
+                    axisLine={false}
+                    tickLine={false}
+                    width={215}
+                />
+                <Bar
+                    dataKey="count"
+                    fill="oklch(1 0 0 / 20%)"
+                    radius={0}
+                    label={{
+                        position: "right",
+                        fill: "oklch(0.985 0 0)",
+                        fontSize: 12,
+                    }}
+                />
+            </BarChart>
+        </ResponsiveContainer>
+    )
 }

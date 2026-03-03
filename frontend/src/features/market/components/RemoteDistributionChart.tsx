@@ -1,55 +1,49 @@
 import {
-    PieChart,
-    Pie,
-    Tooltip,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    ResponsiveContainer,
 } from "recharts"
 import type { RemoteDistribution } from "../../../shared/api/types"
 
 type Props = RemoteDistribution
 
-const COLORS = ["#3b82f6", "#1c53ac", "#202f46"]
+const data = (remote: number, hybrid: number, onsite: number) => [
+    { name: "Remote", value: remote, fill: "oklch(1 0 0 / 90%)" },
+    { name: "Hybrid", value: hybrid, fill: "oklch(1 0 0 / 50%)" },
+    { name: "Onsite", value: onsite, fill: "oklch(1 0 0 / 20%)" },
+]
 
-export function RemoteDistributionChart({
-    hybrid,
-    remote,
-    onsite,
-}: Props) {
-    const data = [
-        { name: "Hybrid", value: hybrid, fill: COLORS[0] },
-        { name: "Remote", value: remote, fill: COLORS[1] },
-        { name: "Onsite", value: onsite, fill: COLORS[2] },
-    ]
-
+export function RemoteDistributionChart({ hybrid, remote, onsite }: Props) {
     return (
-        <div
-            style={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "center",
-            }}
-        >
-            <PieChart
-                style={{
-                    width: "100%",
-                    maxWidth: "500px",
-                    aspectRatio: 1,
-                }}
-                responsive
+        <ResponsiveContainer width="100%" height={3 * 60}>
+            <BarChart
+                data={data(remote, hybrid, onsite)}
+                layout="vertical"
+                margin={{ top: 16, right: 48, bottom: 0, left: 0 }}
+                barSize={25}
             >
-                <Pie
-                    data={data}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius="60%"
-                    outerRadius="80%"
-                    label={({ percent }) =>
-                        `${((percent ?? 0) * 100).toFixed(0)}%`
-                    }
+                <XAxis type="number" hide />
+                <YAxis
+                    type="category"
+                    dataKey="name"
+                    tick={{ fill: "oklch(0.705 0.015 286.067)", fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={48}
                 />
-                <Tooltip />
-            </PieChart>
-        </div>
+                <Bar
+                    dataKey="value"
+                    radius={0}
+                    label={{
+                        position: "right",
+                        formatter: (v: unknown) => `${Number(v).toFixed(0)}%`,
+                        fill: "oklch(0.985 0 0)",
+                        fontSize: 12,
+                    }}
+                />
+            </BarChart>
+        </ResponsiveContainer>
     )
 }
