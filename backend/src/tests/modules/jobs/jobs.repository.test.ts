@@ -46,9 +46,10 @@ describe("JobsRepository", () => {
         expect(prisma.job.createMany).toHaveBeenCalled();
         expect(result).toEqual({ count: 1 });
 
-        const callArgs = vi.mocked(prisma.job.createMany).mock.calls[0][0]
+        const callArgs = vi.mocked(prisma.job.createMany).mock.calls[0]?.[0];
 
-        expect(callArgs.skipDuplicates).toBe(true)
-        expect(callArgs.data).toHaveLength(1)
+        expect(callArgs).toBeDefined();
+        expect(callArgs!.skipDuplicates).toBe(true);
+        expect(callArgs!.data).toHaveLength(1);
     })
 })

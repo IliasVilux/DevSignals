@@ -66,6 +66,6 @@ export class JobsRepository implements IJobsRepository {
         const roleParam = filters.role ?? null;
 
         const rows = await prisma.$queryRawTyped(getTopRoles(countryParam, roleParam, limit))
-        return rows
+        return rows.filter((r): r is TopRoles => r.role !== null);
     }
 }
