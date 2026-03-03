@@ -84,9 +84,9 @@ Frontend:
 - Recharts
 - Feature-based architecture
 
-Deployment Plan:
-- Frontend → Vercel
-- Backend → Render
+Deployment Plan (fully implemented):
+- Backend deployed on Render: https://devsignals.onrender.com
+- Frontend deployed on Vercel: https://dev-signals.vercel.app
 - Public GitHub repository
 - Strong README explaining architectural decisions
 
@@ -276,7 +276,19 @@ But never overcomplicate the current phase.
 
 ---
 
-NEXT LOGICAL STEPS (Not yet implemented)
+IMMEDIATE NEXT PHASE (in order):
+
+1. UI / Design — shadcn/ui integration, visual polish, responsive layout
+2. Component and page tests — React Testing Library after UI stabilizes
+3. Internal refactor and cleanup:
+   - @ path aliases
+   - ESLint + Prettier configuration
+   - Code consistency pass
+4. Technical documentation update if needed
+
+---
+
+FUTURE PHASES (do not implement yet):
 
 - Top technologies / skills aggregation endpoint and visualization
 - Salary breakdown by role chart
