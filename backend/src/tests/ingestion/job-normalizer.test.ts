@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { normalizeJob } from "../../ingestion/job-normalizer";
 import { classifyRemoteType } from "../../ingestion/remote-classifier/remote-classifier";
-import { RemoteType } from "@prisma/client";
+import { RemoteType } from "../../../generated/prisma/client";
 
 describe("normalizeJob", () => {
     const baseRawJob = {

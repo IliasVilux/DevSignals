@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest"
 import { MarketService } from "../../../modules/market/market.service"
-import { RemoteType } from "@prisma/client"
+import { RemoteType } from "../../../../generated/prisma/client"
 
 describe("MarketService", () => {
     const mockJobs = [

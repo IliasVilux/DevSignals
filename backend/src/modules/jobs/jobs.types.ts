@@ -1,4 +1,4 @@
-import { RemoteType } from "@prisma/client";
+import { RemoteType } from "../../../generated/prisma/client";
 
 export interface NormalizedJob {
     externalId: string;

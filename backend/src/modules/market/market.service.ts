@@ -1,6 +1,6 @@
 import { IJobsRepository } from "../jobs/jobs.repository";
 import { MarketOverview, MarketOverviewFilters } from "./market.types";
-import { RemoteType } from "@prisma/client";
+import { RemoteType } from "../../../generated/prisma/client";
 
 export class MarketService {
     constructor(private jobsRepository: IJobsRepository) {}

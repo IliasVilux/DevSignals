@@ -1,4 +1,4 @@
-import { RemoteType } from "@prisma/client";
+import { RemoteType } from "../../../generated/prisma/client";
 import { REMOTE_KEYWORDS } from "./remote-keywords";
 
 const HYBRID_REGEX = [

@@ -1,7 +1,7 @@
 import { prisma } from "../../lib/prisma";
 import { MarketOverviewFilters } from "../market/market.types";
 import { NormalizedJob, TopRoles } from "./jobs.types";
-import { Job } from "@prisma/client";
+import { Job } from "../../../generated/prisma/client";
 import { getTopRoles } from "../../../generated/prisma/sql"
 
 export interface IJobsRepository {
