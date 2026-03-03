@@ -38,7 +38,7 @@ Separation is strict: controllers and services use **typed DTOs** (e.g. `MarketO
   One shared client in `src/lib/prisma.ts` (with `PrismaPg` adapter). No per-request instantiation. Simple and sufficient for current scale; a future multi-tenant or serverless design could introduce scoped clients if needed.
 
 - **CORS**  
-  The `cors` middleware allows requests from the frontend (e.g. `http://localhost:5173` in dev, Vercel URL in production). Configured in `src/app.ts` with an allowed-origins list.
+  The `cors` middleware allows requests from the frontend (`http://localhost:5173` in dev, `https://dev-signals.vercel.app` in production). Configured in `src/app.ts` with an allowed-origins list.
 
 - **Prisma TypedSQL for top roles**  
   Top roles aggregation is done in the database via a custom SQL query (`prisma/sql/getTopRoles.sql`). Prisma’s `typedSql` preview feature generates typed bindings; `JobsRepository.findTopRoles` uses `prisma.$queryRawTyped(getTopRoles(...))`. Roles are grouped by `lower(trim(role))` so "Software Engineer" and "software engineer" count as one. Keeps heavy aggregation in the DB instead of loading all jobs into memory.

@@ -49,6 +49,11 @@ The backend provides a clean, testable analytics API and the frontend consumes i
 - `GET /api/countries` – list all countries (`{ id, code, name }[]`)
 - `GET /api/countries/:code` – get country by code (e.g. `GB`, `ES`)
 
+## Deployment
+
+- **Backend:** https://devsignals.onrender.com
+- **Frontend:** https://dev-signals.vercel.app
+
 ## High-Level Architecture
 
 ### Backend

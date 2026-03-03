@@ -5,6 +5,11 @@ Goal: a **clean, analytics-oriented frontend** that consumes the backend aggrega
 
 The focus is architectural correctness over visual polish — demonstrating real-world production engineering patterns for a portfolio context.
 
+## Live Demo
+
+- **Frontend:** https://dev-signals.vercel.app  
+- **Backend API:** https://devsignals.onrender.com
+
 ---
 
 ## Architecture Overview
