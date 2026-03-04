@@ -63,6 +63,7 @@ The frontend follows a **feature-based architecture** that separates application
 ---
 
 ## Folder Structure
+
 ```
 src/
 ├── app/
@@ -176,6 +177,7 @@ From `frontend/`:
 ## Running Locally
 
 1. Install dependencies (from `frontend/`):
+
 ```bash
 pnpm install
 ```
@@ -185,6 +187,7 @@ pnpm install
         - `VITE_API_BASE_URL` — base URL of the backend (e.g. `http://localhost:3000`)
 
 3. Start the dev server:
+
 ```bash
 pnpm dev
 ```

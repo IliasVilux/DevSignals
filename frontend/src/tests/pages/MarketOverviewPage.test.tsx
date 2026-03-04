@@ -1,5 +1,4 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import userEvent from "@testing-library/user-event"
 import { MarketOverviewPage } from "@/features/market"
 import { render, screen, waitFor } from "@testing-library/react"
 import { server } from "../mocks/server"
