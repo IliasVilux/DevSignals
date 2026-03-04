@@ -1,0 +1,52 @@
+import { TopRolesChart } from "@/features/market/components"
+import { render, screen } from "@testing-library/react"
+
+vi.mock("recharts", async () => {
+    const actual = await vi.importActual<typeof import("recharts")>("recharts")
+    return {
+        ...actual,
+        ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+        BarChart: ({ data }: { data: { role: string; count: number }[] }) => (
+            <div data-testid="bar-chart">
+                {data.map((entry) => (
+                    <div key={entry.role} data-testid="bar-entry">
+                        <span>{entry.role}</span>
+                        <span>{entry.count}</span>
+                    </div>
+                ))}
+            </div>
+        ),
+        Bar: () => null,
+        XAxis: () => null,
+        YAxis: () => null,
+    }
+})
+
+const defaultData = [
+    { role: "Software Engineer", count: 30 },
+    { role: "Data Scientist", count: 25 },
+    { role: "Product Manager", count: 10 },
+]
+
+describe("TopRolesChart", () => {
+    it("renders an entry for each role", () => {
+        render(<TopRolesChart data={defaultData} />)
+
+        expect(screen.getAllByTestId("bar-entry")).toHaveLength(3)
+    })
+
+    it("renders role names and counts", () => {
+        render(<TopRolesChart data={defaultData} />)
+
+        expect(screen.getByText("Software Engineer")).toBeInTheDocument()
+        expect(screen.getByText("30")).toBeInTheDocument()
+        expect(screen.getByText("Data Scientist")).toBeInTheDocument()
+        expect(screen.getByText("25")).toBeInTheDocument()
+    })
+
+    it("renders empty chart without crashing when data is empty", () => {
+        render(<TopRolesChart data={[]} />)
+
+        expect(screen.queryAllByTestId("bar-entry")).toHaveLength(0)
+    })
+})
