@@ -98,14 +98,20 @@ src/
 │       └── Icons.tsx           # SVG icon components (typed with SVGProps)
 │
 └── tests/
+    ├── components/
+    │   ├── MarketFilters.test.tsx            # Interactions: country select, role input
+    │   ├── RemoteDistributionChart.test.tsx  # Data transformation to chart entries
+    │   └── TopRolesChart.test.tsx            # Data transformation to chart entries
     ├── hooks/
-    │   ├── useDebounce.test.ts           # Timing and debounce behavior
-    │   ├── useCountries.test.tsx         # Fetch, loading, error states
-    │   └── useMarketOverview.test.tsx    # Fetch, loading, error, filter reactivity
+    │   ├── useDebounce.test.ts               # Timing and debounce behavior
+    │   ├── useCountries.test.tsx             # Fetch, loading, error states
+    │   └── useMarketOverview.test.tsx        # Fetch, loading, error, filter reactivity
     ├── mocks/
-    │   ├── handlers.ts                   # MSW mock API handlers
-    │   └── server.ts                     # MSW node server setup
-    └── setup.ts                          # MSW server lifecycle + jest-dom setup
+    │   ├── handlers.ts                       # MSW mock API handlers
+    │   └── server.ts                         # MSW node server setup
+    ├── pages/
+    │   └── MarketOverviewPage.test.tsx       # Integration: full filter → fetch → render flow
+    └── setup.ts                              # MSW server lifecycle + jest-dom setup                          # MSW server lifecycle + jest-dom setup
 ```
 
 ---
@@ -198,18 +204,31 @@ Make sure the backend is running and accessible at the configured base URL.
 
 ## Testing Strategy
 
-**Philosophy:** Hooks are tested in isolation using MSW to intercept network requests at the fetch level. This keeps tests decoupled from implementation details — if the API client changes internally, the tests remain valid because they test behavior, not internals.
+**Philosophy:** Behavior over implementation. Tests assert what the user sees and what the system does — not how it's internally wired. MSW intercepts network requests at the fetch level, so tests remain valid even if the API client changes internally.
 
-**Stack:** Vitest + React Testing Library + MSW
+**Stack:** Vitest + React Testing Library + MSW + `@testing-library/user-event`
 
-- **`useDebounce`** — pure timing tests using `vi.useFakeTimers()`
-- **`useCountries`** — hook tested with `QueryClientProvider` wrapper and MSW handler; covers loading, success, and error states
-- **`useMarketOverview`** — same pattern plus filter change test: verifies that changing `countryCode` triggers a new fetch with updated data
+**Hooks** — tested in isolation with a `QueryClientProvider` wrapper:
+
+- `useDebounce` — pure timing tests using `vi.useFakeTimers()`
+- `useCountries` — covers loading, success, and error states
+- `useMarketOverview` — same pattern plus filter reactivity: verifies that changing `countryCode` triggers a new fetch with updated data
+
+**Components** — tested with real user interactions via `userEvent`:
+
+- `MarketFilters` — country select (load, select, deselect, API error), role input (typing, controlled value)
+- `RemoteDistributionChart` — verifies correct data transformation before reaching Recharts
+- `TopRolesChart` — same pattern; Recharts mocked entirely since jsdom has no layout engine
+
+**Page (integration)** — `MarketOverviewPage` tested end-to-end with real hooks and MSW:
+
+- Loading, error, and success states
+- Null salary renders `—`
+- Country filter change triggers new request and updates displayed data
 
 ---
 
 ## Intentional Simplifications (Current Phase)
 
-- **No component tests yet** — hooks are covered; React Testing Library component tests will be introduced in a later phase when the UI stabilizes
 - **No error boundaries** — basic error states handled at the hook level; structured error UI is a next step
 - **Single route** — routing infrastructure is in place; additional pages will be added as new features are built
