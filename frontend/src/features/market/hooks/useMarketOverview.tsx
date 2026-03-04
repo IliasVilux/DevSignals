@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { getMarketOverview } from "../../../shared/api"
+import { getMarketOverview } from "@/shared/api"
 
 type params = {
     countryCode?: string

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useCountries } from "../../features/market/hooks";
+import { useCountries } from "@/features/market/hooks";
 import { renderHook, waitFor } from "@testing-library/react";
 import { server } from "../mocks/server";
 import { http, HttpResponse } from "msw";

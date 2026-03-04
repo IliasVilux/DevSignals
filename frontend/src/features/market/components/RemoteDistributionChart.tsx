@@ -5,7 +5,7 @@ import {
     YAxis,
     ResponsiveContainer,
 } from "recharts"
-import type { RemoteDistribution } from "../../../shared/api/types"
+import type { RemoteDistribution } from "@/shared/api/types"
 
 type Props = RemoteDistribution
 

@@ -5,7 +5,7 @@ import {
     YAxis,
     ResponsiveContainer,
 } from "recharts"
-import type { TopRoles } from "../../../shared/api/types"
+import type { TopRoles } from "@/shared/api/types"
 
 type Props = {
     data: TopRoles[]

@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useMarketOverview } from "../hooks"
 import { MarketFilters, RemoteDistributionChart, TopRolesChart } from "../components"
-import { useDebounce } from "../../../shared/hooks"
+import { useDebounce } from "@/shared/hooks"
 
 export function MarketOverviewPage() {
     const [countryCode, setCountryCode] = useState<string | undefined>(undefined)
