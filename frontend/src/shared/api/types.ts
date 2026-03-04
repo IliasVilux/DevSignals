@@ -1,7 +1,7 @@
 export type RemoteDistribution = {
-  remote: number
-  hybrid: number
-  onsite: number
+    remote: number
+    hybrid: number
+    onsite: number
 }
 
 export type TopRoles = {
@@ -10,19 +10,19 @@ export type TopRoles = {
 }
 
 export type MarketOverview = {
-  totalJobs: number
-  averageSalary: number | null
-  remoteDistribution: RemoteDistribution
-  topRoles: TopRoles[]
+    totalJobs: number
+    averageSalary: number | null
+    remoteDistribution: RemoteDistribution
+    topRoles: TopRoles[]
 }
 
 export type GetMarketOverviewParams = {
-  countryCode?: string
-  role?: string
+    countryCode?: string
+    role?: string
 }
 
 export type Country = {
-  id: string
-  code: string
-  name: string
+    id: string
+    code: string
+    name: string
 }

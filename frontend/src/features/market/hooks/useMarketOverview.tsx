@@ -8,7 +8,7 @@ type params = {
 
 export function useMarketOverview(params: params) {
     return useQuery({
-        queryKey: ['marketOverview', params],
+        queryKey: ["marketOverview", params],
         queryFn: () => getMarketOverview(params),
     })
 }

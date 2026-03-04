@@ -8,9 +8,7 @@ type Props = {
     onRoleChange: (value: string) => void
 }
 
-export function MarketFilters({
-    countryCode, role, onCountryChange, onRoleChange
-}: Props) {
+export function MarketFilters({ countryCode, role, onCountryChange, onRoleChange }: Props) {
     const { data, isLoading } = useCountries()
 
     return (
@@ -23,14 +21,20 @@ export function MarketFilters({
                     disabled={isLoading}
                     className="w-full border border-border text-sm text-foreground pl-3 pr-10 py-2 outline-none focus:border-foreground/40 disabled:text-muted-foreground transition-colors cursor-pointer appearance-none"
                 >
-                    <option value="" className="bg-card">All countries</option>
+                    <option value="" className="bg-card">
+                        All countries
+                    </option>
                     {data?.map((country) => (
                         <option key={country.id} value={country.code} className="bg-card">
                             {country.name}
                         </option>
                     ))}
                 </select>
-                <ArrowDownSLine className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" width={16} height={16} />
+                <ArrowDownSLine
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                    width={16}
+                    height={16}
+                />
             </div>
 
             <input

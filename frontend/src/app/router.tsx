@@ -1,5 +1,5 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { MarketOverviewPage } from "../features/market";
+import { BrowserRouter, Route, Routes } from "react-router-dom"
+import { MarketOverviewPage } from "../features/market"
 
 export function AppRouter() {
     return (

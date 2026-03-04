@@ -7,7 +7,7 @@ The focus is architectural correctness over visual polish — demonstrating real
 
 ## Live Demo
 
-- **Frontend:** https://dev-signals.vercel.app  
+- **Frontend:** https://dev-signals.vercel.app
 - **Backend API:** https://devsignals.onrender.com
 
 ---
@@ -16,11 +16,11 @@ The focus is architectural correctness over visual polish — demonstrating real
 
 The frontend follows a **feature-based architecture** that separates application configuration, business domains, and shared utilities.
 
-| Layer | Responsibility |
-|-------|----------------|
-| `app/` | Root composition, global providers, routing |
-| `features/` | Domain-scoped components, hooks, and pages |
-| `shared/` | Cross-feature API client, types, and utility hooks |
+| Layer       | Responsibility                                     |
+| ----------- | -------------------------------------------------- |
+| `app/`      | Root composition, global providers, routing        |
+| `features/` | Domain-scoped components, hooks, and pages         |
+| `shared/`   | Cross-feature API client, types, and utility hooks |
 
 ---
 
@@ -50,6 +50,7 @@ The frontend follows a **feature-based architecture** that separates application
 ---
 
 ## Folder Structure
+
 ```
 src/
 ├── app/
@@ -105,16 +106,19 @@ The `MarketOverviewPage` orchestrates the dashboard:
 - Renders filter controls, stat cards, and chart components
 
 **Filters** (`MarketFilters`)
+
 - Country dropdown populated dynamically from `GET /api/countries`
 - Role text input with debounce via `useDebounce`
 
 **Stats displayed**
+
 - Total jobs analyzed
 - Average salary
 - Remote / Hybrid / Onsite distribution (percentages)
 - Top roles
 
 **Charts**
+
 - `RemoteDistributionChart` — donut chart showing work modality distribution
 - `TopRolesChart` — horizontal bar chart showing top 5 roles by job count
 
@@ -124,10 +128,10 @@ The `MarketOverviewPage` orchestrates the dashboard:
 
 Consumed from `shared/api/`:
 
-| Endpoint | Hook | Description |
-|----------|------|-------------|
+| Endpoint                   | Hook                | Description                                                            |
+| -------------------------- | ------------------- | ---------------------------------------------------------------------- |
 | `GET /api/market/overview` | `useMarketOverview` | Returns `totalJobs`, `averageSalary`, `remoteDistribution`, `topRoles` |
-| `GET /api/countries` | `useCountries` | Returns `{ id, code, name }[]` for filter select |
+| `GET /api/countries`       | `useCountries`      | Returns `{ id, code, name }[]` for filter select                       |
 
 Query params forwarded by `useMarketOverview`: `countryCode`, `role` (debounced).
 
@@ -156,15 +160,17 @@ From `frontend/`:
 ## Running Locally
 
 1. Install dependencies (from `frontend/`):
+
 ```bash
 pnpm install
 ```
 
 2. Configure environment:
-   - Create a `.env` file with:
-     - `VITE_API_BASE_URL` — base URL of the backend (e.g. `http://localhost:3000`)
+    - Create a `.env` file with:
+        - `VITE_API_BASE_URL` — base URL of the backend (e.g. `http://localhost:3000`)
 
 3. Start the dev server:
+
 ```bash
 pnpm dev
 ```

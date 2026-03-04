@@ -1,10 +1,4 @@
-import {
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    ResponsiveContainer,
-} from "recharts"
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts"
 import type { RemoteDistribution } from "@/shared/api/types"
 
 type Props = RemoteDistribution

@@ -10,10 +10,10 @@ export function MarketOverviewPage() {
 
     const { data, isLoading, error, isError } = useMarketOverview({
         countryCode,
-        role: debouncedRole || undefined
+        role: debouncedRole || undefined,
     })
 
-    return(
+    return (
         <div className="min-h-screen">
             {/* Header */}
             <header className="border-b border-border px-6 py-6">
@@ -79,7 +79,7 @@ export function MarketOverviewPage() {
                             <p className="text-xs text-muted-foreground tracking-widest uppercase">
                                 remote distribution
                             </p>
-                                <RemoteDistributionChart {...data.remoteDistribution} />
+                            <RemoteDistributionChart {...data.remoteDistribution} />
                         </div>
 
                         {/* Top roles */}

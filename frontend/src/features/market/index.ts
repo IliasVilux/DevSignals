@@ -1,2 +1,2 @@
-export { MarketOverviewPage } from "./pages/MarketOverviewPage";
-export { useMarketOverview } from "./hooks";
+export { MarketOverviewPage } from "./pages/MarketOverviewPage"
+export { useMarketOverview } from "./hooks"

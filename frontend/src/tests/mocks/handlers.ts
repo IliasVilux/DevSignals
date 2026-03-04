@@ -1,24 +1,24 @@
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw"
 
 export const handlers = [
     http.get("*/api/countries", () => {
         return HttpResponse.json([
             {
-                "id": "1",
-                "name": "Spain",
-                "code": "ES"
+                id: "1",
+                name: "Spain",
+                code: "ES",
             },
             {
-                "id": "2",
-                "name": "France",
-                "code": "FR"
+                id: "2",
+                name: "France",
+                code: "FR",
             },
             {
-                "id": "3",
-                "name": "United Kingdom",
-                "code": "GB"
-            }
-        ]);
+                id: "3",
+                name: "United Kingdom",
+                code: "GB",
+            },
+        ])
     }),
 
     http.get("*/api/market/overview", () => {
@@ -29,17 +29,17 @@ export const handlers = [
             topRoles: [
                 {
                     role: "Software Engineer",
-                    count: 30
+                    count: 30,
                 },
                 {
                     role: "Data Scientist",
-                    count: 25
+                    count: 25,
                 },
                 {
                     role: "Product Manager",
-                    count: 10
-                }
+                    count: 10,
+                },
             ],
-        });
-    })
+        })
+    }),
 ]

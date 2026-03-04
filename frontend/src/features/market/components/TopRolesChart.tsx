@@ -1,10 +1,4 @@
-import {
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    ResponsiveContainer,
-} from "recharts"
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts"
 import type { TopRoles } from "@/shared/api/types"
 
 type Props = {
@@ -33,7 +27,9 @@ export function TopRolesChart({ data }: Props) {
                             fontSize={12}
                             textAnchor="start"
                         >
-                            {payload.value.length > 30 ? `${payload.value.slice(0, 30)}…` : payload.value}
+                            {payload.value.length > 30
+                                ? `${payload.value.slice(0, 30)}…`
+                                : payload.value}
                         </text>
                     )}
                     axisLine={false}
