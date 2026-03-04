@@ -18,7 +18,7 @@ export function TopRolesChart({ data }: Props) {
                 <YAxis
                     type="category"
                     dataKey="role"
-                    tick={({ x, y, payload }) => (
+                    tick={({ y, payload }) => (
                         <text
                             x={0}
                             y={y}
