@@ -29,11 +29,12 @@ The backend provides a clean, testable analytics API and the frontend consumes i
 ### Frontend
 
 - Feature-based React + TypeScript architecture
+- Dark, data-first UI built with Tailwind CSS v4 and shadcn/ui (zinc theme)
 - TanStack Query for server state management
 - Country select populated dynamically from the API
 - Role text input with debounce to avoid unnecessary requests
 - Stats display: total jobs, average salary, remote/hybrid/onsite percentages and top roles
-- Recharts pie chart visualizing remote type distribution and bar chart for top roles
+- Recharts horizontal bar charts for remote distribution and top roles
 
 ### Current API
 

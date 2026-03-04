@@ -1,9 +1,9 @@
 # DevSignals Frontend
 
 Frontend for DevSignals: React + TypeScript + Vite + TanStack Query + Recharts.  
-Goal: a **clean, analytics-oriented frontend** that consumes the backend aggregation API and transforms market data into meaningful developer insights.
+Goal: a **clean, data-first analytics frontend** that consumes the backend aggregation API and transforms market data into meaningful developer insights.
 
-The focus is architectural correctness over visual polish — demonstrating real-world production engineering patterns for a portfolio context.
+The focus is architectural correctness and production engineering patterns — built as a portfolio-grade project demonstrating real-world frontend decisions.
 
 ## Live Demo
 
@@ -47,10 +47,22 @@ The frontend follows a **feature-based architecture** that separates application
 - **Shared domain types**  
   `shared/api/types.ts` defines the frontend's canonical types (`MarketOverview`, `Country`, etc.). These mirror the backend API contract and are used across hooks and components, ensuring type safety end to end.
 
+- **Path aliases**  
+  All cross-feature imports use the `@/` alias (e.g. `@/shared/api/types`). Relative `../../../` paths are reserved for imports within the same module. Configured in both `tsconfig.json` and `vite.config.ts`.
+
+---
+
+## UI & Styling
+
+- **Tailwind CSS v4** — CSS-first configuration, no `tailwind.config.js`
+- **shadcn/ui** — zinc theme, used selectively for interactive components only
+- **Design language** — dark background, monospace typography (JetBrains Mono), border-based structure over shadows, data as the visual protagonist
+- **Responsive layout** — single-column on mobile, grid-based on desktop (`md:grid-cols-3`)
+- **Charts** — horizontal bar charts via Recharts with custom SVG tick rendering and inline value labels
+
 ---
 
 ## Folder Structure
-
 ```
 src/
 ├── app/
@@ -63,7 +75,7 @@ src/
 │       ├── components/
 │       │   ├── index.ts                    # Component exports
 │       │   ├── MarketFilters.tsx           # Country select + role text input
-│       │   ├── RemoteDistributionChart.tsx # Donut chart: remote/hybrid/onsite
+│       │   ├── RemoteDistributionChart.tsx # Horizontal bar chart: remote/hybrid/onsite
 │       │   └── TopRolesChart.tsx           # Horizontal bar chart: top 5 roles
 │       ├── hooks/
 │       │   ├── index.ts                   # Hook exports
@@ -78,9 +90,11 @@ src/
 │   │   ├── client.ts           # Fetch abstraction (base URL, error handling)
 │   │   ├── index.ts            # Domain endpoint functions
 │   │   └── types.ts            # Shared frontend domain types
-│   └── hooks/
-│       ├── index.ts            # Shared hook exports
-│       └── useDebounce.ts      # Debounce utility for input performance
+│   ├── hooks/
+│   │   ├── index.ts            # Shared hook exports
+│   │   └── useDebounce.ts      # Debounce utility for input performance
+│   └── ui/
+│       └── Icons.tsx           # SVG icon components (typed with SVGProps)
 │
 └── tests/
     ├── hooks/
@@ -97,13 +111,14 @@ src/
 
 ## Current Features
 
-### Market Overview Dashboard (`/market/overview`)
+### Market Overview Dashboard (`/`)
 
 The `MarketOverviewPage` orchestrates the dashboard:
 
 - Manages filter state: selected country and role search input
 - Passes debounced role value to `useMarketOverview` to avoid over-fetching
-- Renders filter controls, stat cards, and chart components
+- Renders filter controls, stat blocks, and chart components
+- Responsive grid layout: stats + remote distribution on top, top roles full-width below
 
 **Filters** (`MarketFilters`)
 
@@ -114,12 +129,10 @@ The `MarketOverviewPage` orchestrates the dashboard:
 
 - Total jobs analyzed
 - Average salary
-- Remote / Hybrid / Onsite distribution (percentages)
-- Top roles
 
 **Charts**
 
-- `RemoteDistributionChart` — donut chart showing work modality distribution
+- `RemoteDistributionChart` — horizontal bar chart showing remote/hybrid/onsite distribution
 - `TopRolesChart` — horizontal bar chart showing top 5 roles by job count
 
 ---
@@ -143,7 +156,8 @@ Query params forwarded by `useMarketOverview`: `countryCode`, `role` (debounced)
 - Vite (dev server + build)
 - React Router v6 (client-side routing)
 - TanStack Query v5 (server state, caching, background refetch)
-- Recharts (chart visualizations)
+- Recharts v3 (chart visualizations)
+- Tailwind CSS v4 + shadcn/ui (zinc theme)
 
 ---
 
@@ -154,13 +168,14 @@ From `frontend/`:
 - `pnpm dev` — start Vite dev server
 - `pnpm build` — production build
 - `pnpm preview` — preview production build locally
+- `pnpm lint` — run ESLint
+- `pnpm format` — run Prettier across all files
 
 ---
 
 ## Running Locally
 
 1. Install dependencies (from `frontend/`):
-
 ```bash
 pnpm install
 ```
@@ -170,7 +185,6 @@ pnpm install
         - `VITE_API_BASE_URL` — base URL of the backend (e.g. `http://localhost:3000`)
 
 3. Start the dev server:
-
 ```bash
 pnpm dev
 ```
@@ -185,22 +199,14 @@ Make sure the backend is running and accessible at the configured base URL.
 
 **Stack:** Vitest + React Testing Library + MSW
 
-- **`useDebounce`** — `src/tests/hooks/useDebounce.test.ts`  
-  Pure timing tests using `vi.useFakeTimers()`: initial value returned immediately, value not updated before delay, value updated after delay, delay resets if value changes before expiry.
-
-- **`useCountries`** — `src/tests/hooks/useCountries.test.tsx`  
-  Hook tested with `QueryClientProvider` wrapper and MSW handler. Covers: loading state on mount, successful data return, error state when API fails.
-
-- **`useMarketOverview`** — `src/tests/hooks/useMarketOverview.test.tsx`  
-  Same pattern as `useCountries` plus a filter change test: verifies that changing `countryCode` triggers a new fetch and returns different data, confirming the parameter-driven query key works correctly.
+- **`useDebounce`** — pure timing tests using `vi.useFakeTimers()`
+- **`useCountries`** — hook tested with `QueryClientProvider` wrapper and MSW handler; covers loading, success, and error states
+- **`useMarketOverview`** — same pattern plus filter change test: verifies that changing `countryCode` triggers a new fetch with updated data
 
 ---
 
 ## Intentional Simplifications (Current Phase)
 
-- **No component tests yet** — hooks are covered; React Testing Library component tests will be introduced in a later phase when the UI stabilizes.
-- **No design system** — UI is functional but unstyled beyond basic layout. Visual polish is deferred until the data layer is complete.
-- **No error boundaries** — Basic error states are handled at the hook level; structured error UI is a next step.
-- **Single route** — Routing infrastructure is in place; additional pages will be added as new features are built.
-
-These choices reflect MVP priorities: get the data layer right before investing in UI layer complexity.
+- **No component tests yet** — hooks are covered; React Testing Library component tests will be introduced in a later phase when the UI stabilizes
+- **No error boundaries** — basic error states handled at the hook level; structured error UI is a next step
+- **Single route** — routing infrastructure is in place; additional pages will be added as new features are built

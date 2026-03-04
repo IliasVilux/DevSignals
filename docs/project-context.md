@@ -81,7 +81,9 @@ Frontend:
 - TypeScript
 - Vite
 - TanStack Query
-- Recharts
+- Recharts v3
+- Tailwind CSS v4
+- shadcn/ui (zinc theme)
 - Feature-based architecture
 
 Deployment Plan (fully implemented):
@@ -129,9 +131,11 @@ Frontend architecture:
 - Feature-based folder structure
 - Custom hooks per domain (useMarketOverview, useCountries)
 - TanStack Query for server state management
-- Recharts for data visualization
+- Recharts for data visualization (horizontal bar charts)
 - Debounced inputs to avoid unnecessary API calls
 - Components separated by responsibility (filters, charts, stats)
+- Path aliases (@/) for cross-feature imports
+- ESLint + Prettier configured
 
 ---
 
@@ -167,7 +171,7 @@ Remote type detection is handled in the normalization layer with improved keywor
 
 CURRENT PHASE
 
-Phase 1 — MVP (Market Overview v0.1) — COMPLETED CORE
+Phase 1 — MVP (Market Overview v0.1) — COMPLETED
 
 Backend (fully implemented):
 - Prisma schema
@@ -193,8 +197,12 @@ Frontend (fully implemented):
 - useMarketOverview hook (fetches from GET /api/market/overview)
 - useCountries hook (fetches from GET /api/countries, populates country select)
 - Filters: country select (from API), role text input with debounce
-- Stats display: total jobs, average salary, remote/hybrid/onsite percentages
-- Recharts integration: BarChart showing remote type distribution visually
+- Stats display: total jobs, average salary
+- Remote/hybrid/onsite distribution and top roles via horizontal bar charts (Recharts)
+- Dark data-first UI with Tailwind CSS v4 + shadcn/ui (zinc theme)
+- Responsive layout: single-column on mobile, grid-based on desktop
+- Path aliases (@/) configured in tsconfig.json and vite.config.ts
+- ESLint + Prettier configured with format-on-save
 
 Current API:
 
@@ -278,13 +286,7 @@ But never overcomplicate the current phase.
 
 IMMEDIATE NEXT PHASE (in order):
 
-1. UI / Design — shadcn/ui integration, visual polish, responsive layout
-2. Component and page tests — React Testing Library after UI stabilizes
-3. Internal refactor and cleanup:
-   - @ path aliases
-   - ESLint + Prettier configuration
-   - Code consistency pass
-4. Technical documentation update if needed
+1. Component and page tests — React Testing Library
 
 ---
 
