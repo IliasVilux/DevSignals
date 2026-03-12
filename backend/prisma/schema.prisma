@@ -20,6 +20,15 @@ enum RemoteType {
   REMOTE
 }
 
+enum SkillCategory {
+  LANGUAGE
+  FRAMEWORK
+  DATABASE
+  DEVOPS
+  CLOUD
+  OTHER
+}
+
 model Country {
   id       String   @id @default(cuid())
   name     String   @unique
@@ -40,8 +49,25 @@ model Job {
   country     Country    @relation(fields: [countryId], references: [id])
   countryId   String
   createdAt   DateTime   @default(now())
+  skills      JobSkill[]
 
   @@unique([externalId, countryId])
   @@index([countryId, role])
   @@index([postedAt])
+}
+
+model Skill {
+  id             String        @id @default(cuid())
+  name           String        @unique
+  category       SkillCategory @default(OTHER)
+  jobs           JobSkill[]
+}
+
+model JobSkill {
+  job      Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId    String
+  skill    Skill  @relation(fields: [skillId], references: [id])
+  skillId  String
+
+  @@id([jobId, skillId])
 }
