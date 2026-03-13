@@ -73,11 +73,6 @@ export const SKILLS_DICTIONARY: SkillEntry[] = [
     category: SkillCategory.LANGUAGE,
     aliases: ["scala"],
   },
-  {
-    name: "R",
-    category: SkillCategory.LANGUAGE,
-    aliases: ["\\br\\b"],
-  },
 
   // Frameworks & Libraries
   {
