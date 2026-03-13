@@ -39,7 +39,6 @@ export interface AdzunaJobRaw {
 const BASE_URL = "http://api.adzuna.com/v1/api/jobs"
 
 export async function fetchJobsFromAdzuna(countryCode: string, page = 1): Promise<AdzunaJobRaw[]> {
-  // const url = `${BASE_URL}/${countryCode.toLowerCase()}/search/${page}?app_id=${env.ADZUNA_APP_ID}&app_key=${env.ADZUNA_API_KEY}&category=it-jobs&results_per_page=20&content-type=application/json`
   const url = new URL(`${BASE_URL}/${countryCode.toLowerCase()}/search/${page}`)
   url.searchParams.set("app_id", env.ADZUNA_APP_ID)
   url.searchParams.set("app_key", env.ADZUNA_API_KEY)

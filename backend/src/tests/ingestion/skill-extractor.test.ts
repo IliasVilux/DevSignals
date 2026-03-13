@@ -17,7 +17,6 @@ describe("extractSkills", () => {
   it("normalizes aliases to the canonical name", () => {
     const result = extractSkills("ReactJS developer needed", null);
     expect(result).toContainEqual({ name: "React", category: SkillCategory.FRAMEWORK });
-    // Should not have duplicates for the same canonical skill
     const reactMatches = result.filter((s) => s.name === "React");
     expect(reactMatches).toHaveLength(1);
   });
@@ -29,7 +28,6 @@ describe("extractSkills", () => {
   });
 
   it("does not match partial words (word boundary check)", () => {
-    // "go" must not match inside "Django" or "MongoDB"
     const result = extractSkills("Django developer with MongoDB experience", null);
     expect(result).not.toContainEqual({ name: "Go", category: SkillCategory.LANGUAGE });
   });
