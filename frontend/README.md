@@ -16,11 +16,11 @@ The focus is architectural correctness and production engineering patterns — b
 
 The frontend follows a **feature-based architecture** that separates application configuration, business domains, and shared utilities.
 
-| Layer       | Responsibility                                     |
-| ----------- | -------------------------------------------------- |
-| `app/`      | Root composition, global providers, routing        |
-| `features/` | Domain-scoped components, hooks, and pages         |
-| `shared/`   | Cross-feature API client, types, and utility hooks |
+| Layer       | Responsibility                                                    |
+| ----------- | ----------------------------------------------------------------- |
+| `app/`      | Root composition, global providers, routing                       |
+| `features/` | Domain-scoped components, hooks, and pages                        |
+| `shared/`   | Cross-feature API client, types, utility hooks, and UI primitives |
 
 ---
 
@@ -68,7 +68,7 @@ The frontend follows a **feature-based architecture** that separates application
 src/
 ├── app/
 │   ├── index.tsx              # Root composition: wraps providers + router
-│   ├── providers.tsx          # Global providers (QueryClientProvider)
+│   ├── providers.tsx          # Global providers (QueryClientProvider, TooltipProvider)
 │   └── router.tsx             # React Router route definitions
 │
 ├── features/
@@ -95,7 +95,8 @@ src/
 │   │   ├── index.ts            # Shared hook exports
 │   │   └── useDebounce.ts      # Debounce utility for input performance
 │   └── ui/
-│       └── Icons.tsx           # SVG icon components (typed with SVGProps)
+│       ├── Icons.tsx           # SVG icon components (typed with SVGProps)
+│       └── tooltip.tsx         # shadcn/ui Tooltip primitive (Radix-based)
 │
 └── tests/
     ├── components/
