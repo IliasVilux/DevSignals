@@ -87,7 +87,7 @@ export function TopRolesChart({ data }: Props) {
                 <Bar
                     xAxisId={1}
                     dataKey="avgSalary"
-                    fill="oklch(0.65 0.15 250 / 50%)"
+                    fill="oklch(1 0 0 / 50%)"
                     radius={0}
                     label={{
                         position: "right",
