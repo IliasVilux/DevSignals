@@ -53,7 +53,10 @@ Separation is strict: controllers and services use **typed DTOs** (e.g. `MarketO
   `MarketService` receives `IJobsRepository` in its constructor. Controllers (or tests) pass a concrete `JobsRepository` or a mock. No DI container: manual wiring keeps the stack transparent and avoids over-engineering for current scope.
 
 - **No authentication or user system in this phase**  
-  By design for MVP. The API is read-only analytics; auth and rate-limiting are deferred until they add real product value.
+  By design for MVP. The API is read-only analytics; auth is deferred until it adds real product value.
+
+- **Rate limiting**  
+  All `/api/*` routes are protected by `express-rate-limit` (100 requests per IP per 15-minute window). Returns standard `RateLimit-*` response headers (`draft-8`) so clients can handle backoff gracefully. Applied globally in `src/app.ts` before route mounting.
 
 ---
 
@@ -194,6 +197,7 @@ backend/
    - Creates an `express()` app
    - Enables CORS for frontend origins (`http://localhost:5173`, Vercel URL)
    - Uses `express.json()`
+   - Applies rate limiter (100 req/IP/15min) to all `/api/*` routes
    - Mounts `marketRoutes` under `/api/market`, `countriesRoutes` under `/api/countries`
 
 2. **HTTP server bootstrap** – `src/server.ts`
