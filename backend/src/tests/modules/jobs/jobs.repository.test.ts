@@ -3,7 +3,12 @@ import { JobsRepository } from "../../../modules/jobs/jobs.repository";
 import { prisma } from "../../../lib/prisma";
 import { NormalizedJob } from "../../../modules/jobs/jobs.types";
 import { Country } from "../../../modules/countries/countries.types";
-import { RemoteType, SkillCategory, Job, Skill } from "../../../../generated/prisma/client";
+import {
+  RemoteType,
+  SkillCategory,
+  Job,
+  Skill,
+} from "../../../../generated/prisma/client";
 
 type PersistedJobRef = Pick<Job, "id" | "externalId" | "countryId">;
 type PersistedSkillRef = Pick<Skill, "id" | "name">;

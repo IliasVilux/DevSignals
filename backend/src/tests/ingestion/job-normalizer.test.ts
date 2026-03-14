@@ -20,7 +20,7 @@ describe("normalizeJob", () => {
     expect(normalized.externalId).toBe("123");
     expect(normalized.role).toBe("Software Engineer");
     expect(normalized.description).toBe(
-      "This is a software engineering job at Tech Co.",
+      "This is a software engineering job at Tech Co."
     );
     expect(normalized.company).toBe("Tech Co");
     expect(normalized.salaryMin).toBe(50000);
@@ -53,7 +53,7 @@ describe("normalizeJob", () => {
 
   it("hybrid has priority over remote", () => {
     expect(classifyRemoteType("Hybrid remote position")).toBe(
-      RemoteType.HYBRID,
+      RemoteType.HYBRID
     );
   });
 
@@ -86,7 +86,7 @@ describe("normalizeJob", () => {
         salary_max: undefined,
         description: undefined,
       },
-      "US",
+      "US"
     );
 
     expect(minimalJob.externalId).toEqual("123");
@@ -102,19 +102,19 @@ describe("normalizeJob", () => {
 
   it("detects flexible hybrid work", () => {
     expect(classifyRemoteType("Flexible hybrid working model")).toBe(
-      RemoteType.HYBRID,
+      RemoteType.HYBRID
     );
   });
 
   it("detects telework remote", () => {
     expect(classifyRemoteType("Possibility of telework")).toBe(
-      RemoteType.REMOTE,
+      RemoteType.REMOTE
     );
   });
 
   it("detects french remote", () => {
     expect(classifyRemoteType("Travail à distance possible")).toBe(
-      RemoteType.REMOTE,
+      RemoteType.REMOTE
     );
   });
 });

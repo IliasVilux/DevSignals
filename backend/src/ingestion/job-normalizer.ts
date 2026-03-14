@@ -5,7 +5,7 @@ import { extractSkills } from "./skill-extractor/skill-extractor";
 
 export function normalizeJob(
   raw: AdzunaJobRaw,
-  countryCode: string,
+  countryCode: string
 ): NormalizedJob {
   const searchableText = `${raw.title ?? ""} ${raw.description ?? ""}`;
 

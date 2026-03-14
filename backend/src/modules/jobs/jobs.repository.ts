@@ -8,11 +8,11 @@ export interface IJobsRepository {
   findJobs(filters?: MarketOverviewFilters): Promise<Job[]>;
   findTopRoles(
     filters: MarketOverviewFilters,
-    limit: number,
+    limit: number
   ): Promise<TopRoles[]>;
   findTopSkills(
     filters: MarketOverviewFilters,
-    limit: number,
+    limit: number
   ): Promise<TopSkill[]>;
 }
 
@@ -60,7 +60,7 @@ export class JobsRepository implements IJobsRepository {
     });
 
     const jobIdMap = new Map(
-      persistedJobs.map((j) => [`${j.externalId}:${j.countryId}`, j.id]),
+      persistedJobs.map((j) => [`${j.externalId}:${j.countryId}`, j.id])
     );
 
     const allSkills = jobs.flatMap((j) => j.skills);
@@ -84,7 +84,7 @@ export class JobsRepository implements IJobsRepository {
 
     const jobSkillData = jobs.flatMap((j) => {
       const jobId = jobIdMap.get(
-        `${j.externalId}:${countryMap.get(j.countryCode)}`,
+        `${j.externalId}:${countryMap.get(j.countryCode)}`
       );
       if (!jobId) return [];
 
@@ -119,7 +119,7 @@ export class JobsRepository implements IJobsRepository {
 
   async findTopRoles(
     filters: MarketOverviewFilters,
-    limit: number,
+    limit: number
   ): Promise<TopRoles[]> {
     const countryParam = filters.countryCode
       ? filters.countryCode.toUpperCase()
@@ -127,14 +127,14 @@ export class JobsRepository implements IJobsRepository {
     const roleParam = filters.role ?? null;
 
     const rows = await prisma.$queryRawTyped(
-      getTopRoles(countryParam, roleParam, limit),
+      getTopRoles(countryParam, roleParam, limit)
     );
     return rows.filter((r): r is TopRoles => r.role !== null);
   }
 
   async findTopSkills(
     filters: MarketOverviewFilters,
-    limit: number,
+    limit: number
   ): Promise<TopSkill[]> {
     const countryParam = filters.countryCode
       ? filters.countryCode.toUpperCase()
@@ -142,13 +142,13 @@ export class JobsRepository implements IJobsRepository {
     const roleParam = filters.role ?? null;
 
     const rows = await prisma.$queryRawTyped(
-      getTopSkills(countryParam, roleParam, limit),
+      getTopSkills(countryParam, roleParam, limit)
     );
 
     return rows
       .filter(
         (r): r is { name: string; category: string; count: number } =>
-          r.name !== null && r.category !== null && r.count !== null,
+          r.name !== null && r.category !== null && r.count !== null
       )
       .map((r) => ({ ...r, category: r.category as SkillCategory }));
   }

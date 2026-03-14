@@ -5,6 +5,8 @@ const router = Router();
 const countriesController = new CountriesController();
 
 router.get("/", (req, res) => countriesController.getAllCountries(req, res));
-router.get("/:code", (req, res) => countriesController.getCountryByCode(req, res));
+router.get("/:code", (req, res) =>
+  countriesController.getCountryByCode(req, res)
+);
 
 export default router;

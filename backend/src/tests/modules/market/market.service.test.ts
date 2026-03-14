@@ -131,15 +131,15 @@ describe("MarketService", () => {
 
     expect(result.topRoles).toHaveLength(2);
     const softwareEngineer = result.topRoles.find(
-      (r) => r.role.toLowerCase() === "software engineer",
+      (r) => r.role.toLowerCase() === "software engineer"
     );
     const frontendDev = result.topRoles.find(
-      (r) => r.role.toLowerCase() === "frontend dev",
+      (r) => r.role.toLowerCase() === "frontend dev"
     );
     expect(softwareEngineer?.count).toBe(2);
     expect(frontendDev?.count).toBe(1);
     expect(result.topRoles[0].count).toBeGreaterThanOrEqual(
-      result.topRoles[1].count,
+      result.topRoles[1].count
     );
   });
 
@@ -166,7 +166,7 @@ describe("MarketService", () => {
       count: 10,
     });
     expect(result.topSkills[0].count).toBeGreaterThanOrEqual(
-      result.topSkills[1].count,
+      result.topSkills[1].count
     );
   });
 });
