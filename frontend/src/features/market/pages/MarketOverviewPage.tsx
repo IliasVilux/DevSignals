@@ -7,6 +7,7 @@ import {
     TopSkillsChart,
 } from "../components"
 import { useDebounce } from "@/shared/hooks"
+import { Skeleton } from "@/shared/ui/skeleton"
 
 export function MarketOverviewPage() {
     const [countryCode, setCountryCode] = useState<string | undefined>(undefined)
@@ -50,31 +51,27 @@ export function MarketOverviewPage() {
                         aria-live="polite"
                     >
                         <span className="sr-only">fetching market data</span>
-                        {/* Stats skeleton */}
                         <div className="flex flex-col divide-y divide-border border-b md:border-r">
                             <div className="px-8 py-6 space-y-3">
-                                <div className="h-2.5 w-16 bg-muted rounded" />
-                                <div className="h-9 w-20 bg-muted rounded" />
+                                <Skeleton className="h-2.5 w-16" />
+                                <Skeleton className="h-9 w-20" />
                             </div>
                             <div className="px-8 py-6 space-y-3">
-                                <div className="h-2.5 w-16 bg-muted rounded" />
-                                <div className="h-9 w-24 bg-muted rounded" />
+                                <Skeleton className="h-2.5 w-16" />
+                                <Skeleton className="h-9 w-24" />
                             </div>
                         </div>
-                        {/* Remote chart skeleton */}
                         <div className="col-span-1 md:col-span-2 px-8 py-6 border-b border-border space-y-3">
-                            <div className="h-2.5 w-32 bg-muted rounded" />
-                            <div className="h-36 bg-muted rounded" />
+                            <Skeleton className="h-2.5 w-32" />
+                            <Skeleton className="h-36" />
                         </div>
-                        {/* Top roles skeleton */}
                         <div className="col-span-1 md:col-span-3 px-8 py-6 border-b border-border space-y-3">
-                            <div className="h-2.5 w-20 bg-muted rounded" />
-                            <div className="h-44 bg-muted rounded" />
+                            <Skeleton className="h-2.5 w-20" />
+                            <Skeleton className="h-44" />
                         </div>
-                        {/* Top skills skeleton */}
                         <div className="col-span-1 md:col-span-3 px-8 py-6 space-y-3">
-                            <div className="h-2.5 w-20 bg-muted rounded" />
-                            <div className="h-44 bg-muted rounded" />
+                            <Skeleton className="h-2.5 w-20" />
+                            <Skeleton className="h-44" />
                         </div>
                     </div>
                 )}
