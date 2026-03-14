@@ -128,6 +128,9 @@ The `MarketOverviewPage` orchestrates the dashboard:
 - Passes debounced role value to `useMarketOverview` to avoid over-fetching
 - Renders filter controls, stat blocks, and chart components
 - Responsive grid layout: stats + remote distribution on top, top roles full-width below
+- **Loading state**: animate-pulse skeleton grid mirroring the full layout (sr-only label for accessibility)
+- **Empty state**: "no jobs found" message when `totalJobs === 0` (e.g. role filter with no results)
+- **Error state**: visible destructive-color error message when the API call fails
 
 **Filters** (`MarketFilters`)
 
@@ -226,7 +229,9 @@ Make sure the backend is running and accessible at the configured base URL.
 
 **Page (integration)** — `MarketOverviewPage` tested end-to-end with real hooks and MSW:
 
-- Loading, error, and success states
+- Loading skeleton renders and exposes accessible text via `sr-only` span
+- Empty state renders when API returns `totalJobs: 0`
+- Error, and success states
 - Null salary renders `—`
 - Country filter change triggers new request and updates displayed data
 
@@ -234,5 +239,5 @@ Make sure the backend is running and accessible at the configured base URL.
 
 ## Intentional Simplifications (Current Phase)
 
-- **No error boundaries** — basic error states handled at the hook level; structured error UI is a next step
+- **No error boundaries** — error state handled inline in the page component; a React ErrorBoundary is appropriate at the next scale
 - **Single route** — routing infrastructure is in place; additional pages will be added as new features are built

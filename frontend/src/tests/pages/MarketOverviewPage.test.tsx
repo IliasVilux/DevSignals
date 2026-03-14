@@ -54,10 +54,30 @@ describe("MarketOverviewPage", () => {
     })
 
     describe("loading state", () => {
-        it("shows loading message while data is being fetched", () => {
+        it("shows loading skeleton while data is being fetched", () => {
             render(<MarketOverviewPage />, { wrapper: createWrapper() })
 
             expect(screen.getByText(/fetching market data/i)).toBeInTheDocument()
+        })
+    })
+
+    describe("empty state", () => {
+        it("shows empty message when no jobs are found", async () => {
+            server.use(
+                http.get("*/api/market/overview", () =>
+                    HttpResponse.json({
+                        totalJobs: 0,
+                        averageSalary: null,
+                        remoteDistribution: { remote: 0, hybrid: 0, onsite: 0 },
+                        topRoles: [],
+                        topSkills: [],
+                    })
+                )
+            )
+            render(<MarketOverviewPage />, { wrapper: createWrapper() })
+
+            await waitFor(() => expect(screen.getByText(/no jobs found/i)).toBeInTheDocument())
+            expect(screen.getByText(/try adjusting your filters/i)).toBeInTheDocument()
         })
     })
 

@@ -45,16 +45,55 @@ export function MarketOverviewPage() {
             {/* Main content */}
             <main className="max-w-6xl mx-auto">
                 {isLoading && (
-                    <p className="text-xs text-muted-foreground tracking-widest uppercase animate-pulse px-6 md:px-0 py-8">
-                        fetching market data...
-                    </p>
+                    <div
+                        className="grid grid-cols-1 md:grid-cols-3 md:border-x md:border-b border-border animate-pulse"
+                        aria-live="polite"
+                    >
+                        <span className="sr-only">fetching market data</span>
+                        {/* Stats skeleton */}
+                        <div className="flex flex-col divide-y divide-border border-b md:border-r">
+                            <div className="px-8 py-6 space-y-3">
+                                <div className="h-2.5 w-16 bg-muted rounded" />
+                                <div className="h-9 w-20 bg-muted rounded" />
+                            </div>
+                            <div className="px-8 py-6 space-y-3">
+                                <div className="h-2.5 w-16 bg-muted rounded" />
+                                <div className="h-9 w-24 bg-muted rounded" />
+                            </div>
+                        </div>
+                        {/* Remote chart skeleton */}
+                        <div className="col-span-1 md:col-span-2 px-8 py-6 border-b border-border space-y-3">
+                            <div className="h-2.5 w-32 bg-muted rounded" />
+                            <div className="h-36 bg-muted rounded" />
+                        </div>
+                        {/* Top roles skeleton */}
+                        <div className="col-span-1 md:col-span-3 px-8 py-6 border-b border-border space-y-3">
+                            <div className="h-2.5 w-20 bg-muted rounded" />
+                            <div className="h-44 bg-muted rounded" />
+                        </div>
+                        {/* Top skills skeleton */}
+                        <div className="col-span-1 md:col-span-3 px-8 py-6 space-y-3">
+                            <div className="h-2.5 w-20 bg-muted rounded" />
+                            <div className="h-44 bg-muted rounded" />
+                        </div>
+                    </div>
                 )}
                 {isError && (
                     <p className="text-xs text-destructive tracking-widest uppercase px-6 md:px-0 py-8">
                         error: {error.message}
                     </p>
                 )}
-                {data && (
+                {data && data.totalJobs === 0 && (
+                    <div className="px-6 md:px-0 py-16 text-center">
+                        <p className="text-xs text-muted-foreground tracking-widest uppercase">
+                            no jobs found
+                        </p>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                            try adjusting your filters
+                        </p>
+                    </div>
+                )}
+                {data && data.totalJobs > 0 && (
                     <div className="grid grid-cols-1 md:grid-cols-3 md:border-x md:border-b border-border">
                         {/* Stats column */}
                         <div className="flex flex-col divide-y divide-border border-b md:border-r md:h-full">
