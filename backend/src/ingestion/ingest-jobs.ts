@@ -1,28 +1,4 @@
-import { fetchJobsFromAdzuna } from "./adzuna.client";
-import { normalizeJob } from "./job-normalizer";
-import { JobsRepository } from "../modules/jobs/jobs.repository";
-import { prisma } from "../lib/prisma";
-
-const jobsRepository = new JobsRepository();
-
-async function ingestCountry(countryCode: string) {
-  try {
-    console.log(`Ingesting jobs for ${countryCode}...`);
-
-    const rawJobs = await fetchJobsFromAdzuna(countryCode, 1);
-    const normalized = rawJobs.map((j) => normalizeJob(j, countryCode));
-    await jobsRepository.createMany(normalized);
-
-    await prisma.country.update({
-      where: { code: countryCode },
-      data: { lastIngestedAt: new Date() },
-    });
-
-    console.log(`Ingested ${normalized.length} jobs for ${countryCode}`);
-  } catch (err) {
-    console.error(`Error ingesting jobs for ${countryCode}:`, err);
-  }
-}
+import { ingestCountry, ingestAll } from "./ingest";
 
 async function main() {
   const countryCode = process.argv[2];
@@ -31,10 +7,7 @@ async function main() {
     return;
   }
 
-  const countries = await prisma.country.findMany();
-  for (const country of countries) {
-    await ingestCountry(country.code);
-  }
+  await ingestAll();
 }
 
 main().catch((err) => {
