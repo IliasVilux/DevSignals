@@ -7,6 +7,7 @@ export type RemoteDistribution = {
 export type TopRoles = {
     role: string
     count: number
+    avgSalary: number | null
 }
 
 export type SkillCategory = "LANGUAGE" | "FRAMEWORK" | "DATABASE" | "DEVOPS" | "CLOUD" | "OTHER"

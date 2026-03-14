@@ -6,16 +6,22 @@ type Props = {
     data: TopRoles[]
 }
 
+function formatSalary(value: number): string {
+    return `${Math.round(value / 1000)}k`
+}
+
 export function TopRolesChart({ data }: Props) {
     return (
-        <ResponsiveContainer width="100%" height={data.length * 60}>
+        <ResponsiveContainer width="100%" height={data.length * 90}>
             <BarChart
-                data={data}
+                data={data.map((d) => ({ ...d, avgSalary: d.avgSalary ?? undefined }))}
                 layout="vertical"
-                margin={{ top: 16, right: 48, bottom: 0, left: 0 }}
-                barSize={25}
+                margin={{ top: 16, right: 64, bottom: 0, left: 0 }}
+                barSize={18}
+                barGap={4}
             >
-                <XAxis type="number" hide />
+                <XAxis xAxisId={0} type="number" hide />
+                <XAxis xAxisId={1} type="number" hide orientation="top" />
                 <YAxis
                     type="category"
                     dataKey="role"
@@ -68,6 +74,7 @@ export function TopRolesChart({ data }: Props) {
                     width={250}
                 />
                 <Bar
+                    xAxisId={0}
                     dataKey="count"
                     fill="oklch(1 0 0 / 20%)"
                     radius={0}
@@ -75,6 +82,18 @@ export function TopRolesChart({ data }: Props) {
                         position: "right",
                         fill: "oklch(0.985 0 0)",
                         fontSize: 12,
+                    }}
+                />
+                <Bar
+                    xAxisId={1}
+                    dataKey="avgSalary"
+                    fill="oklch(0.65 0.15 250 / 50%)"
+                    radius={0}
+                    label={{
+                        position: "right",
+                        fill: "oklch(0.985 0 0)",
+                        fontSize: 12,
+                        formatter: (v: number) => formatSalary(v),
                     }}
                 />
             </BarChart>

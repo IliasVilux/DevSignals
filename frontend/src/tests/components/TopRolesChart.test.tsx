@@ -6,7 +6,11 @@ vi.mock("recharts", async () => {
     return {
         ...actual,
         ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-        BarChart: ({ data }: { data: { role: string; count: number }[] }) => (
+        BarChart: ({
+            data,
+        }: {
+            data: { role: string; count: number; avgSalary?: number | null }[]
+        }) => (
             <div data-testid="bar-chart">
                 {data.map((entry) => (
                     <div key={entry.role} data-testid="bar-entry">
@@ -23,9 +27,9 @@ vi.mock("recharts", async () => {
 })
 
 const defaultData = [
-    { role: "Software Engineer", count: 30 },
-    { role: "Data Scientist", count: 25 },
-    { role: "Product Manager", count: 10 },
+    { role: "Software Engineer", count: 30, avgSalary: 65000 },
+    { role: "Data Scientist", count: 25, avgSalary: 72000 },
+    { role: "Product Manager", count: 10, avgSalary: null },
 ]
 
 describe("TopRolesChart", () => {

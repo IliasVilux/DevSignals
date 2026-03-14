@@ -40,9 +40,9 @@ describe("useMarketOverview", () => {
             averageSalary: 50000,
             remoteDistribution: { remote: 40, hybrid: 35, onsite: 25 },
             topRoles: [
-                { role: "Software Engineer", count: 30 },
-                { role: "Data Scientist", count: 25 },
-                { role: "Product Manager", count: 10 },
+                { role: "Software Engineer", count: 30, avgSalary: 65000 },
+                { role: "Data Scientist", count: 25, avgSalary: 72000 },
+                { role: "Product Manager", count: 10, avgSalary: null },
             ],
             topSkills: [
                 { name: "TypeScript", category: "LANGUAGE", count: 20 },
