@@ -40,6 +40,11 @@ export const handlers = [
                     count: 10,
                 },
             ],
+            topSkills: [
+                { name: "TypeScript", category: "LANGUAGE", count: 20 },
+                { name: "React", category: "FRAMEWORK", count: 15 },
+                { name: "PostgreSQL", category: "DATABASE", count: 8 },
+            ],
         })
     }),
 ]

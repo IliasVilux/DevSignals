@@ -1,6 +1,11 @@
 import { useState } from "react"
 import { useMarketOverview } from "../hooks"
-import { MarketFilters, RemoteDistributionChart, TopRolesChart } from "../components"
+import {
+    MarketFilters,
+    RemoteDistributionChart,
+    TopRolesChart,
+    TopSkillsChart,
+} from "../components"
 import { useDebounce } from "@/shared/hooks"
 
 export function MarketOverviewPage() {
@@ -83,11 +88,19 @@ export function MarketOverviewPage() {
                         </div>
 
                         {/* Top roles */}
-                        <div className="col-span-1 md:col-span-3 px-8 py-6">
+                        <div className="col-span-1 md:col-span-3 px-8 py-6 border-b border-border">
                             <p className="text-xs text-muted-foreground tracking-widest uppercase">
                                 top roles
                             </p>
                             <TopRolesChart data={data.topRoles} />
+                        </div>
+
+                        {/* Top skills */}
+                        <div className="col-span-1 md:col-span-3 px-8 py-6">
+                            <p className="text-xs text-muted-foreground tracking-widest uppercase">
+                                top skills
+                            </p>
+                            <TopSkillsChart data={data.topSkills} />
                         </div>
                     </div>
                 )}
