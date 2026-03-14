@@ -60,10 +60,14 @@ export function MarketFilters({ countryCode, role, onCountryChange, onRoleChange
                         height={16}
                     />
                 </div>
-                {freshness && (
+                {isLoading ? (
+                    <p className="text-xs text-muted-foreground mt-2">…</p>
+                ) : freshness ? (
                     <p className="text-xs text-muted-foreground capitalize mt-2">
                         data from {freshness}
                     </p>
+                ) : (
+                    <p className="text-xs mt-2">&nbsp;</p>
                 )}
             </div>
 
