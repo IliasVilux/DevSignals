@@ -16,16 +16,18 @@ It does **not** show job listings; it aggregates external job data and turns it 
 - `frontend/` – React + TypeScript + Vite + TanStack Query + Recharts
 - `docs/` – project context and architecture notes
 
-## Current Phase – MVP v0.2 (Skills Analytics)
+## Current Phase – Phase B light complete, Phase B heavy next
 
-The backend provides a clean, testable analytics API and the frontend consumes it to display meaningful market insights.
+The backend provides a clean, testable analytics API with rate limiting and data freshness tracking. The frontend consumes it to display meaningful market insights with per-role salary data.
 
 ### Backend
 
 - Ingestion pipeline from Adzuna into PostgreSQL via Prisma
 - Normalization of external job data into an internal `Job` model (including improved remote type detection)
 - **Skills extraction pipeline**: regex-based extractor identifies ~70 technologies from job text and persists them to a `Skill`/`JobSkill` graph linked to every ingested job
-- Aggregation logic exposed through a market overview endpoint, now including top skills per country/role
+- Aggregation logic exposed through a market overview endpoint, including top skills per country/role and **average salary per role**
+- **Rate limiting**: 100 req/IP/15min on all `/api/*` routes via `express-rate-limit`
+- **Data freshness**: `lastIngestedAt` timestamp per country, updated after each ingestion run and exposed via the countries endpoint
 
 ### Frontend
 
@@ -33,9 +35,11 @@ The backend provides a clean, testable analytics API and the frontend consumes i
 - Dark, data-first UI built with Tailwind CSS v4 and shadcn/ui (zinc theme)
 - TanStack Query for server state management
 - Country select populated dynamically from the API
+- **Data freshness label**: shows how long ago data was ingested for the selected country (e.g. "data from 3 hours ago")
 - Role text input with debounce to avoid unnecessary requests
 - Stats display: total jobs, average salary, remote/hybrid/onsite percentages, top roles and top skills
-- Recharts horizontal bar charts for remote distribution, top roles, and top skills
+- Recharts horizontal bar charts for remote distribution, top skills
+- **Dual-bar TopRolesChart**: count + average salary per role on independent axes
 
 ### Current API
 
@@ -47,9 +51,9 @@ The backend provides a clean, testable analytics API and the frontend consumes i
     - Total jobs analyzed
     - Average salary
     - Remote / Hybrid / Onsite distribution (percentages)
-    - Top 5 roles (aggregated via Prisma TypedSQL)
+    - Top 5 roles with count and average salary (aggregated via Prisma TypedSQL)
     - Top 10 skills with category (aggregated via Prisma TypedSQL)
-- `GET /api/countries` – list all countries (`{ id, code, name }[]`)
+- `GET /api/countries` – list all countries (`{ id, code, name, lastIngestedAt }[]`)
 - `GET /api/countries/:code` – get country by code (e.g. `GB`, `ES`)
 
 ## Deployment
@@ -64,7 +68,7 @@ The backend provides a clean, testable analytics API and the frontend consumes i
 - **Express app** (`backend/src/app.ts`) exposes REST routes, CORS enabled for frontend origins
 - **Market module** (`backend/src/modules/market`) handles analytics queries
 - **Countries module** (`backend/src/modules/countries`) – Controller → Service → Repository
-- **Jobs module** wraps database access via Prisma; top roles via custom TypedSQL query
+- **Jobs module** wraps database access via Prisma; top roles (with avg salary) and top skills via custom TypedSQL queries
 - **Ingestion layer** (`backend/src/ingestion`) pulls and normalizes external job data
 - **Prisma + PostgreSQL** provide typed, relational persistence
 

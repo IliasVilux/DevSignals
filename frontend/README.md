@@ -75,9 +75,10 @@ src/
 │   └── market/
 │       ├── components/
 │       │   ├── index.ts                    # Component exports
-│       │   ├── MarketFilters.tsx           # Country select + role text input
+│       │   ├── MarketFilters.tsx           # Country select + role text input + freshness label
 │       │   ├── RemoteDistributionChart.tsx # Horizontal bar chart: remote/hybrid/onsite
-│       │   └── TopRolesChart.tsx           # Horizontal bar chart: top 5 roles
+│       │   ├── TopRolesChart.tsx           # Dual-bar chart: count + avgSalary per role
+│       │   └── TopSkillsChart.tsx          # Horizontal bar chart: top 10 skills by category
 │       ├── hooks/
 │       │   ├── index.ts                   # Hook exports
 │       │   ├── useCountries.ts            # Fetches country list for filter select
@@ -132,6 +133,7 @@ The `MarketOverviewPage` orchestrates the dashboard:
 
 - Country dropdown populated dynamically from `GET /api/countries`
 - Role text input with debounce via `useDebounce`
+- Data freshness label: shows how long ago the selected country was last ingested (e.g. "data from 3 hours ago"). When no country is selected, shows the most recently ingested country's timestamp. Computed by `formatLastIngested()` — a pure function, no external library.
 
 **Stats displayed**
 
@@ -141,7 +143,8 @@ The `MarketOverviewPage` orchestrates the dashboard:
 **Charts**
 
 - `RemoteDistributionChart` — horizontal bar chart showing remote/hybrid/onsite distribution
-- `TopRolesChart` — horizontal bar chart showing top 5 roles by job count
+- `TopRolesChart` — dual-bar horizontal chart: **count** (white/20% opacity) + **average salary** (white/50% opacity) per role. Each bar has an independent axis so both series scale correctly regardless of magnitude. Salary label formatted as `Xk`.
+- `TopSkillsChart` — horizontal bar chart showing top 10 skills by count, colored by category
 
 ---
 
@@ -149,10 +152,10 @@ The `MarketOverviewPage` orchestrates the dashboard:
 
 Consumed from `shared/api/`:
 
-| Endpoint                   | Hook                | Description                                                            |
-| -------------------------- | ------------------- | ---------------------------------------------------------------------- |
-| `GET /api/market/overview` | `useMarketOverview` | Returns `totalJobs`, `averageSalary`, `remoteDistribution`, `topRoles` |
-| `GET /api/countries`       | `useCountries`      | Returns `{ id, code, name }[]` for filter select                       |
+| Endpoint                   | Hook                | Description                                                                                            |
+| -------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------ |
+| `GET /api/market/overview` | `useMarketOverview` | Returns `totalJobs`, `averageSalary`, `remoteDistribution`, `topRoles` (with `avgSalary`), `topSkills` |
+| `GET /api/countries`       | `useCountries`      | Returns `{ id, code, name, lastIngestedAt }[]` for filter select and freshness label                   |
 
 Query params forwarded by `useMarketOverview`: `countryCode`, `role` (debounced).
 

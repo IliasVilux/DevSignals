@@ -58,11 +58,17 @@ Separation is strict: controllers and services use **typed DTOs** (e.g. `MarketO
 - **Rate limiting**  
   All `/api/*` routes are protected by `express-rate-limit` (100 requests per IP per 15-minute window). Returns standard `RateLimit-*` response headers (`draft-8`) so clients can handle backoff gracefully. Applied globally in `src/app.ts` before route mounting.
 
+- **Data freshness tracking**  
+  `Country` has a `lastIngestedAt: DateTime?` field updated by the ingestion pipeline after each successful run. Exposed via `GET /api/countries` so the frontend can show users how recent the data is. The `formatLastIngested()` helper on the frontend converts the ISO date to a human-readable relative string (e.g. "3 hours ago").
+
+- **Scheduled ingestion (planned — Phase B heavy)**  
+  `node-cron` will register two background tasks in `src/ingestion/scheduler.ts`: a daily ingest (3am) and a weekly cleanup that deletes jobs older than 30 days. `startScheduler()` will be called from `server.ts` at startup. BullMQ (Redis-based) was considered but deferred — `node-cron` is sufficient for current scale and avoids extra infrastructure dependency.
+
 ---
 
 ## Data Model & Schema
 
-- **`Country`** – `id` (cuid), `name`, `code` (unique). Referenced by jobs; seeded once.
+- **`Country`** – `id` (cuid), `name`, `code` (unique), `lastIngestedAt` (optional timestamp). Referenced by jobs; seeded once. `lastIngestedAt` is stamped after each successful ingestion run for that country.
 - **`Job`** – core entity:
   - Identity: `externalId` (from provider) + `countryId` → **unique constraint** so the same Adzuna job in the same country is stored once; re-ingestion uses `createMany(..., skipDuplicates: true)`.
   - Optional: `description`, `company`, `salaryMin`, `salaryMax` (provider may omit).
@@ -87,7 +93,7 @@ Salary aggregation uses `salaryMin`/`salaryMax`: when both exist we use the midp
 - `totalJobs: number`
 - `averageSalary: number | null` (null when no jobs)
 - `remoteDistribution: { remote: number, hybrid: number, onsite: number }` (percentages 0–100, rounded)
-- `topRoles: { role: string, count: number }[]` (top 5 roles by count, normalized in DB)
+- `topRoles: { role: string, count: number, avgSalary: number | null }[]` (top 5 roles; `avgSalary` is null when salary data is unavailable for that role)
 - `topSkills: { name: string, category: SkillCategory, count: number }[]` (top 10 skills by count)
 
 Omission of both filters returns an overview over all jobs in the database.
@@ -96,7 +102,7 @@ Omission of both filters returns an overview over all jobs in the database.
 
 **`GET /api/countries`**
 
-**Response 200** – `Country[]`: `{ id, code, name }[]`
+**Response 200** – `Country[]`: `{ id, code, name, lastIngestedAt: string | null }[]`
 
 ---
 
@@ -261,6 +267,7 @@ backend/
      - fetch from Adzuna
      - normalize jobs
      - upsert into DB via repositories / Prisma
+     - stamps `lastIngestedAt` on the `Country` record after each successful run
 
 ## Testing Strategy
 
