@@ -21,6 +21,7 @@ export class MarketService {
                     onsite: 0,
                 },
                 topRoles: [],
+                topSkills: [],
             };
         }
 
@@ -39,7 +40,10 @@ export class MarketService {
         const hybridCount = jobs.filter(j => j.remoteType === RemoteType.HYBRID).length;
         const onsiteCount = jobs.filter(j => j.remoteType === RemoteType.ONSITE).length;
 
-        const topRoles = await this.jobsRepository.findTopRoles(filters, 5);
+        const [topRoles, topSkills] = await Promise.all([
+            this.jobsRepository.findTopRoles(filters, 5),
+            this.jobsRepository.findTopSkills(filters, 10),
+        ]);
 
         return {
             totalJobs,
@@ -50,6 +54,7 @@ export class MarketService {
                 onsite: Math.round((onsiteCount / totalJobs) * 100),
             },
             topRoles,
+            topSkills,
         };
     }
 

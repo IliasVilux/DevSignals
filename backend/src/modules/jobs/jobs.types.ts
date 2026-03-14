@@ -1,4 +1,4 @@
-import { RemoteType } from "../../../generated/prisma/client";
+import { RemoteType, SkillCategory } from "../../../generated/prisma/client";
 import { ExtractedSkill } from "../../ingestion/skill-extractor/skill-extractor";
 
 export interface NormalizedJob {
@@ -16,5 +16,11 @@ export interface NormalizedJob {
 
 export interface TopRoles {
   role: string;
+  count: number;
+}
+
+export interface TopSkill {
+  name: string;
+  category: SkillCategory;
   count: number;
 }

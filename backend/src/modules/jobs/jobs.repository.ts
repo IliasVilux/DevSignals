@@ -1,8 +1,8 @@
 import { prisma } from "../../lib/prisma";
 import { MarketOverviewFilters } from "../market/market.types";
-import { NormalizedJob, TopRoles } from "./jobs.types";
-import { Job } from "../../../generated/prisma/client";
-import { getTopRoles } from "../../../generated/prisma/sql";
+import { NormalizedJob, TopRoles, TopSkill } from "./jobs.types";
+import { Job, SkillCategory } from "../../../generated/prisma/client";
+import { getTopRoles, getTopSkills } from "../../../generated/prisma/sql";
 
 export interface IJobsRepository {
   findJobs(filters?: MarketOverviewFilters): Promise<Job[]>;
@@ -10,6 +10,10 @@ export interface IJobsRepository {
     filters: MarketOverviewFilters,
     limit: number,
   ): Promise<TopRoles[]>;
+  findTopSkills(
+    filters: MarketOverviewFilters,
+    limit: number,
+  ): Promise<TopSkill[]>;
 }
 
 export class JobsRepository implements IJobsRepository {
@@ -126,5 +130,26 @@ export class JobsRepository implements IJobsRepository {
       getTopRoles(countryParam, roleParam, limit),
     );
     return rows.filter((r): r is TopRoles => r.role !== null);
+  }
+
+  async findTopSkills(
+    filters: MarketOverviewFilters,
+    limit: number,
+  ): Promise<TopSkill[]> {
+    const countryParam = filters.countryCode
+      ? filters.countryCode.toUpperCase()
+      : null;
+    const roleParam = filters.role ?? null;
+
+    const rows = await prisma.$queryRawTyped(
+      getTopSkills(countryParam, roleParam, limit),
+    );
+
+    return rows
+      .filter(
+        (r): r is { name: string; category: string; count: number } =>
+          r.name !== null && r.category !== null && r.count !== null,
+      )
+      .map((r) => ({ ...r, category: r.category as SkillCategory }));
   }
 }
