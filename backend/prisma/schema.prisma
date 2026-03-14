@@ -30,10 +30,11 @@ enum SkillCategory {
 }
 
 model Country {
-  id       String   @id @default(cuid())
-  name     String   @unique
-  code     String   @unique
-  jobs     Job[]
+  id              String    @id @default(cuid())
+  name            String    @unique
+  code            String    @unique
+  lastIngestedAt  DateTime?
+  jobs            Job[]
 }
 
 model Job {

@@ -13,6 +13,11 @@ async function ingestCountry(countryCode: string) {
     const normalized = rawJobs.map((j) => normalizeJob(j, countryCode));
     await jobsRepository.createMany(normalized);
 
+    await prisma.country.update({
+      where: { code: countryCode },
+      data: { lastIngestedAt: new Date() },
+    });
+
     console.log(`Ingested ${normalized.length} jobs for ${countryCode}`);
   } catch (err) {
     console.error(`Error ingesting jobs for ${countryCode}:`, err);
