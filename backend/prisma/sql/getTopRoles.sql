@@ -4,7 +4,16 @@
 
 SELECT
   min(j.role) AS role,
-  count(*)::int AS count
+  count(*)::int AS count,
+  ROUND(AVG(
+    CASE
+      WHEN j."salaryMin" IS NOT NULL AND j."salaryMax" IS NOT NULL
+        THEN (j."salaryMin" + j."salaryMax") / 2.0
+      WHEN j."salaryMin" IS NOT NULL THEN j."salaryMin"
+      WHEN j."salaryMax" IS NOT NULL THEN j."salaryMax"
+      ELSE NULL
+    END
+  ))::int AS "avgSalary"
 FROM "Job" j
 JOIN "Country" c ON j."countryId" = c.id
 WHERE ($1::text IS NULL OR c.code = $1::text)

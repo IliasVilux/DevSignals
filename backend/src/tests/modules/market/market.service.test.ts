@@ -121,8 +121,8 @@ describe("MarketService", () => {
     const mockRepository = {
       findJobs: vi.fn().mockResolvedValue(jobsWithSameRole),
       findTopRoles: vi.fn().mockResolvedValue([
-        { role: "Software Engineer", count: 2 },
-        { role: "Frontend Dev", count: 1 },
+        { role: "Software Engineer", count: 2, avgSalary: 65000 },
+        { role: "Frontend Dev", count: 1, avgSalary: null },
       ]),
       findTopSkills: vi.fn().mockResolvedValue([]),
     };
