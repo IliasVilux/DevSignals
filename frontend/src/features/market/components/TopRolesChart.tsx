@@ -1,5 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts"
 import type { TopRoles } from "@/shared/api/types"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip"
 
 type Props = {
     data: TopRoles[]
@@ -18,23 +19,53 @@ export function TopRolesChart({ data }: Props) {
                 <YAxis
                     type="category"
                     dataKey="role"
-                    tick={({ y, payload }) => (
-                        <text
-                            x={0}
-                            y={y}
-                            dy={3}
-                            fill="oklch(0.705 0.015 286.067)"
-                            fontSize={12}
-                            textAnchor="start"
-                        >
-                            {payload.value.length > 30
-                                ? `${payload.value.slice(0, 30)}…`
-                                : payload.value}
-                        </text>
-                    )}
+                    tick={({ y, payload }) => {
+                        const isTruncated = payload.value.length > 30
+                        const displayText = isTruncated
+                            ? `${payload.value.slice(0, 30)}…`
+                            : payload.value
+
+                        if (!isTruncated) {
+                            return (
+                                <text
+                                    x={0}
+                                    y={y}
+                                    dy={3}
+                                    fill="oklch(0.705 0.015 286.067)"
+                                    fontSize={12}
+                                    textAnchor="start"
+                                >
+                                    {displayText}
+                                </text>
+                            )
+                        }
+
+                        return (
+                            <foreignObject x={0} y={(y as number) - 10} width={250} height={20}>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <span
+                                            style={{
+                                                color: "oklch(0.705 0.015 286.067)",
+                                                fontSize: 12,
+                                                cursor: "default",
+                                                display: "inline-block",
+                                                lineHeight: "20px",
+                                            }}
+                                        >
+                                            {displayText}
+                                        </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>{payload.value}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </foreignObject>
+                        )
+                    }}
                     axisLine={false}
                     tickLine={false}
-                    width={215}
+                    width={250}
                 />
                 <Bar
                     dataKey="count"
