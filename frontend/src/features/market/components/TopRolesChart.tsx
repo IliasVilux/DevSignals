@@ -93,7 +93,7 @@ export function TopRolesChart({ data }: Props) {
                         position: "right",
                         fill: "oklch(0.985 0 0)",
                         fontSize: 12,
-                        formatter: (v: number) => formatSalary(v),
+                        formatter: (v: unknown) => (typeof v === "number" ? formatSalary(v) : ""),
                     }}
                 />
             </BarChart>
