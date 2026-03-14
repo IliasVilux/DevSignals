@@ -16,7 +16,7 @@ It does **not** show job listings; it aggregates external job data and turns it 
 - `frontend/` – React + TypeScript + Vite + TanStack Query + Recharts
 - `docs/` – project context and architecture notes
 
-## Current Phase – MVP v0.1 (Market Overview)
+## Current Phase – MVP v0.2 (Skills Analytics)
 
 The backend provides a clean, testable analytics API and the frontend consumes it to display meaningful market insights.
 
@@ -24,7 +24,8 @@ The backend provides a clean, testable analytics API and the frontend consumes i
 
 - Ingestion pipeline from Adzuna into PostgreSQL via Prisma
 - Normalization of external job data into an internal `Job` model (including improved remote type detection)
-- Aggregation logic exposed through a market overview endpoint
+- **Skills extraction pipeline**: regex-based extractor identifies ~70 technologies from job text and persists them to a `Skill`/`JobSkill` graph linked to every ingested job
+- Aggregation logic exposed through a market overview endpoint, now including top skills per country/role
 
 ### Frontend
 
@@ -33,8 +34,8 @@ The backend provides a clean, testable analytics API and the frontend consumes i
 - TanStack Query for server state management
 - Country select populated dynamically from the API
 - Role text input with debounce to avoid unnecessary requests
-- Stats display: total jobs, average salary, remote/hybrid/onsite percentages and top roles
-- Recharts horizontal bar charts for remote distribution and top roles
+- Stats display: total jobs, average salary, remote/hybrid/onsite percentages, top roles and top skills
+- Recharts horizontal bar charts for remote distribution, top roles, and top skills
 
 ### Current API
 
@@ -47,6 +48,7 @@ The backend provides a clean, testable analytics API and the frontend consumes i
     - Average salary
     - Remote / Hybrid / Onsite distribution (percentages)
     - Top 5 roles (aggregated via Prisma TypedSQL)
+    - Top 10 skills with category (aggregated via Prisma TypedSQL)
 - `GET /api/countries` – list all countries (`{ id, code, name }[]`)
 - `GET /api/countries/:code` – get country by code (e.g. `GB`, `ES`)
 
@@ -58,6 +60,7 @@ The backend provides a clean, testable analytics API and the frontend consumes i
 ## High-Level Architecture
 
 ### Backend
+
 - **Express app** (`backend/src/app.ts`) exposes REST routes, CORS enabled for frontend origins
 - **Market module** (`backend/src/modules/market`) handles analytics queries
 - **Countries module** (`backend/src/modules/countries`) – Controller → Service → Repository
@@ -66,6 +69,7 @@ The backend provides a clean, testable analytics API and the frontend consumes i
 - **Prisma + PostgreSQL** provide typed, relational persistence
 
 ### Frontend
+
 - **Feature-based structure** under `frontend/src/features/`
 - **Custom hooks** per domain: `useMarketOverview`, `useCountries`
 - **TanStack Query** manages caching, loading, and error states

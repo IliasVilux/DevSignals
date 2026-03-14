@@ -9,13 +9,13 @@ Goal: a **clean, explainable analytics backend** that demonstrates layered archi
 
 The backend follows a **layered, module-oriented design**:
 
-| Layer | Responsibility | Does not |
-|-------|----------------|---------|
-| **Routes** | Map HTTP to controller methods | Parse query/body in detail; contain business logic |
-| **Controller** | Parse request, call service, shape HTTP response | Talk to the database; contain aggregation logic |
-| **Service** | Domain logic, aggregations, orchestration across repositories | Know about HTTP, Express, or raw SQL |
-| **Repository** | Data access: Prisma queries, persistence details | Contain business rules; know about “market overview” or “ingestion” |
-| **Ingestion** | External API client + normalization + orchestration | Depend on Express; assume request/response shape |
+| Layer          | Responsibility                                                | Does not                                                            |
+| -------------- | ------------------------------------------------------------- | ------------------------------------------------------------------- |
+| **Routes**     | Map HTTP to controller methods                                | Parse query/body in detail; contain business logic                  |
+| **Controller** | Parse request, call service, shape HTTP response              | Talk to the database; contain aggregation logic                     |
+| **Service**    | Domain logic, aggregations, orchestration across repositories | Know about HTTP, Express, or raw SQL                                |
+| **Repository** | Data access: Prisma queries, persistence details              | Contain business rules; know about “market overview” or “ingestion” |
+| **Ingestion**  | External API client + normalization + orchestration           | Depend on Express; assume request/response shape                    |
 
 **Request flow:** `HTTP → Route → Controller → Service → Repository(ies) → Prisma → DB`  
 **Ingestion flow:** `Adzuna API → Client → Normalizer → Repository → Prisma → DB`
@@ -29,9 +29,9 @@ Separation is strict: controllers and services use **typed DTOs** (e.g. `MarketO
 - **Repository pattern**  
   All DB access goes through repository classes. Controllers and services never import Prisma or touch SQL. This keeps persistence swappable and makes unit testing easy (mock the repository interface, e.g. `IJobsRepository`).
 
-- **Explicit type boundaries**  
-  - **`NormalizedJob`** – internal contract between ingestion (normalizer) and persistence (repository). No Prisma or Adzuna types in the normalizer’s public signature.  
-  - **`MarketOverview` / `MarketOverviewFilters`** – API and service contract. Response shape and filter options are explicit and type-safe.  
+- **Explicit type boundaries**
+  - **`NormalizedJob`** – internal contract between ingestion (normalizer) and persistence (repository). No Prisma or Adzuna types in the normalizer’s public signature.
+  - **`MarketOverview` / `MarketOverviewFilters`** – API and service contract. Response shape and filter options are explicit and type-safe.
   - **Prisma-generated types** – used only inside repositories and in tests that assert against DB-shaped data.
 
 - **Single Prisma client**  
@@ -40,8 +40,11 @@ Separation is strict: controllers and services use **typed DTOs** (e.g. `MarketO
 - **CORS**  
   The `cors` middleware allows requests from the frontend (`http://localhost:5173` in dev, `https://dev-signals.vercel.app` in production). Configured in `src/app.ts` with an allowed-origins list.
 
-- **Prisma TypedSQL for top roles**  
-  Top roles aggregation is done in the database via a custom SQL query (`prisma/sql/getTopRoles.sql`). Prisma’s `typedSql` preview feature generates typed bindings; `JobsRepository.findTopRoles` uses `prisma.$queryRawTyped(getTopRoles(...))`. Roles are grouped by `lower(trim(role))` so "Software Engineer" and "software engineer" count as one. Keeps heavy aggregation in the DB instead of loading all jobs into memory.
+- **Prisma TypedSQL for aggregations**  
+  Both top-roles and top-skills aggregations are done in the database via custom SQL queries (`prisma/sql/getTopRoles.sql`, `prisma/sql/getTopSkills.sql`). Prisma's `typedSql` preview feature (requires `pnpm prisma generate --sql` in v7.4.0) generates typed bindings; repositories use `prisma.$queryRawTyped(...)`. Roles are grouped by `lower(trim(role))`; skills by `Skill.id`. The `category` enum column in `getTopSkills.sql` is cast to `::text` to avoid Prisma's enum inference limitation, then cast back to `SkillCategory` in TypeScript.
+
+- **Skills extraction pipeline**  
+  The normalizer calls `extractSkills(title, description)` before persisting any job. The extractor uses pre-compiled regex patterns (built at module load time for performance) against a curated dictionary of ~70 technologies across 5 categories. Ambiguous short aliases (e.g. "R", "Go") are replaced with unambiguous phrases ("r programming", "golang"). Extracted skills are bulk-upserted in a 5-query batch: job insert → re-fetch IDs → skill upsert → skill re-fetch → jobSkill insert.
 
 - **Environment validation at startup**  
   `src/config/env.ts` reads and validates required env vars once. The app fails fast at boot if `DATABASE_URL`, `ADZUNA_APP_ID`, `ADZUNA_API_KEY`, or `PORT` are missing—no silent runtime failures.
@@ -71,9 +74,9 @@ Salary aggregation uses `salaryMin`/`salaryMax`: when both exist we use the midp
 
 **`GET /api/market/overview`**
 
-| Query param   | Type   | Required | Description                          |
-|---------------|--------|----------|--------------------------------------|
-| `countryCode` | string | No       | Filter by country (e.g. `GB`, `DE`)  |
+| Query param   | Type   | Required | Description                         |
+| ------------- | ------ | -------- | ----------------------------------- |
+| `countryCode` | string | No       | Filter by country (e.g. `GB`, `DE`) |
 | `role`        | string | No       | Case-insensitive substring on role  |
 
 **Response 200** – `MarketOverview`:
@@ -82,6 +85,7 @@ Salary aggregation uses `salaryMin`/`salaryMax`: when both exist we use the midp
 - `averageSalary: number | null` (null when no jobs)
 - `remoteDistribution: { remote: number, hybrid: number, onsite: number }` (percentages 0–100, rounded)
 - `topRoles: { role: string, count: number }[]` (top 5 roles by count, normalized in DB)
+- `topSkills: { name: string, category: SkillCategory, count: number }[]` (top 10 skills by count)
 
 Omission of both filters returns an overview over all jobs in the database.
 
@@ -95,8 +99,8 @@ Omission of both filters returns an overview over all jobs in the database.
 
 **`GET /api/countries/:code`**
 
-| Path param | Description        |
-|------------|--------------------|
+| Path param | Description                    |
+| ---------- | ------------------------------ |
 | `code`     | Country code (e.g. `GB`, `ES`) |
 
 **Response 200** – `Country`: `{ id, code, name }`  
@@ -143,9 +147,12 @@ backend/
     │   ├── remote-classifier/
     │   │   ├── remote-classifier.ts   # classifyRemoteType: regex + keyword matching → RemoteType enum
     │   │   └── remote-keywords.ts     # Keyword lists per RemoteType (multilingual: EN, ES, FR, DE, IT)
+    │   ├── skill-extractor/
+    │   │   ├── skill-extractor.ts     # extractSkills: regex-based tech detection → ExtractedSkill[]
+    │   │   └── skills-dictionary.ts   # ~70 technology entries with canonical names, categories, aliases
     │   ├── adzuna.client.ts           # HTTP client for Adzuna API
     │   ├── ingest-jobs.ts             # Orchestration: fetch → normalize → persist
-    │   └── job-normalizer.ts          # Map raw Adzuna job → internal Job model
+    │   └── job-normalizer.ts          # Map raw Adzuna job → NormalizedJob (incl. skill extraction)
     ├── lib/
     │   └── prisma.ts              # Prisma client instance
     ├── modules/
@@ -166,7 +173,8 @@ backend/
     │   └── countries.routes.ts    # /api/countries routes → countries controller
     ├── tests/
     │   ├── ingestion/
-    │   │   └── job-normalizer.test.ts
+    │   │   ├── job-normalizer.test.ts
+    │   │   └── skill-extractor.test.ts
     │   └── modules/
     │       ├── countries/
     │       │   └── countries.repository.test.ts
@@ -204,11 +212,11 @@ backend/
 5. **Service layer** – `src/modules/market/market.service.ts`
    - Core **aggregation logic**
    - Uses `JobsRepository.findJobs` for total count, salary, remote distribution
-   - Uses `JobsRepository.findTopRoles` for top 5 roles (TypedSQL in DB)
-   - Returns `MarketOverview` with all fields
+   - Uses `Promise.all` to run `findTopRoles` and `findTopSkills` in parallel (both TypedSQL in DB)
+   - Returns `MarketOverview` with all fields including `topSkills`
 
 6. **Repository layer** – `src/modules/*/*.repository.ts`
-   - `JobsRepository`: `findJobs` (Prisma `findMany`), `findTopRoles` (Prisma `$queryRawTyped` with `getTopRoles.sql`)
+   - `JobsRepository`: `findJobs` (Prisma `findMany`), `findTopRoles` and `findTopSkills` (both `$queryRawTyped`)
    - `CountriesRepository`: `getAllCountries`, `findByCode`
    - All persistence behind these interfaces
 
@@ -283,12 +291,12 @@ These choices keep the backend easy to reason about and to extend when requireme
 ## Running Locally (Backend Only)
 
 1. Install dependencies (from `backend/`):
+
 ```bash
 pnpm install
 ```
 
 2. Configure environment:
-
    - Create a `.env` file with (all required at startup; see `src/config/env.ts`):
      - `DATABASE_URL`
      - `ADZUNA_APP_ID`

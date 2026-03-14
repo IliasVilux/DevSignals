@@ -240,6 +240,7 @@ Returns:
 - averageSalary
 - remoteDistribution: { remote, hybrid, onsite } (percentages)
 - topRoles
+- topSkills: { name, category, count }[] (top 10 skills by count)
 
 GET /api/countries
 Returns:
@@ -314,7 +315,7 @@ But never overcomplicate the current phase.
 
 IMMEDIATE NEXT PHASE (in order):
 
-1. Top technologies / skills aggregation endpoint and visualization
+1. Frontend: TopSkillsChart component and wiring topSkills into MarketOverviewPage
 
 ---
 
