@@ -39,16 +39,19 @@ describe("useCountries", () => {
                 id: "1",
                 name: "Spain",
                 code: "ES",
+                lastIngestedAt: "2026-03-14T10:00:00.000Z",
             },
             {
                 id: "2",
                 name: "France",
                 code: "FR",
+                lastIngestedAt: null,
             },
             {
                 id: "3",
                 name: "United Kingdom",
                 code: "GB",
+                lastIngestedAt: "2026-03-14T08:00:00.000Z",
             },
         ])
     })
