@@ -17,6 +17,7 @@ export interface NormalizedJob {
 export interface TopRoles {
   role: string;
   count: number;
+  avgSalary: number | null;
 }
 
 export interface TopSkill {
