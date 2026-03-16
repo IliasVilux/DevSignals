@@ -20,8 +20,8 @@ function MobileTopRolesChart({ data }: Props) {
                 <div key={item.role}>
                     <p
                         style={{
-                            color: "oklch(0.705 0.015 286.067)",
-                            fontSize: 12,
+                            color: "oklch(0.985 0 0)",
+                            fontSize: 13,
                             marginBottom: 4,
                         }}
                     >
@@ -33,10 +33,10 @@ function MobileTopRolesChart({ data }: Props) {
                                 style={{
                                     height: 18,
                                     width: `${(item.count / maxCount) * 100}%`,
-                                    background: "oklch(1 0 0 / 20%)",
+                                    background: "var(--indigo-low)",
                                 }}
                             />
-                            <span style={{ color: "oklch(0.985 0 0)", fontSize: 12 }}>
+                            <span style={{ color: "oklch(0.985 0 0)", fontSize: 13 }}>
                                 {item.count}
                             </span>
                         </div>
@@ -46,10 +46,10 @@ function MobileTopRolesChart({ data }: Props) {
                                     style={{
                                         height: 18,
                                         width: `${(item.avgSalary / maxSalary) * 100}%`,
-                                        background: "oklch(1 0 0 / 50%)",
+                                        background: "var(--indigo-mid)",
                                     }}
                                 />
-                                <span style={{ color: "oklch(0.985 0 0)", fontSize: 12 }}>
+                                <span style={{ color: "oklch(0.985 0 0)", fontSize: 13 }}>
                                     {formatSalary(item.avgSalary)}
                                 </span>
                             </div>
@@ -72,7 +72,6 @@ export function TopRolesChart({ data }: Props) {
                     <BarChart
                         data={data.map((d) => ({ ...d, avgSalary: d.avgSalary ?? undefined }))}
                         layout="vertical"
-                        margin={{ top: 16, right: 32, bottom: 0, left: 0 }}
                         barSize={18}
                         barGap={2}
                     >
@@ -93,8 +92,8 @@ export function TopRolesChart({ data }: Props) {
                                             x={0}
                                             y={y}
                                             dy={3}
-                                            fill="oklch(0.705 0.015 286.067)"
-                                            fontSize={12}
+                                            fill="oklch(0.985 0 0)"
+                                            fontSize={13}
                                             textAnchor="start"
                                         >
                                             {displayText}
@@ -113,8 +112,8 @@ export function TopRolesChart({ data }: Props) {
                                             <TooltipTrigger asChild>
                                                 <span
                                                     style={{
-                                                        color: "oklch(0.705 0.015 286.067)",
-                                                        fontSize: 12,
+                                                        color: "oklch(0.985 0 0)",
+                                                        fontSize: 13,
                                                         cursor: "default",
                                                         display: "inline-block",
                                                         lineHeight: "20px",
@@ -137,23 +136,25 @@ export function TopRolesChart({ data }: Props) {
                         <Bar
                             xAxisId={0}
                             dataKey="count"
-                            fill="oklch(1 0 0 / 20%)"
+                            fill="var(--indigo-low)"
                             radius={0}
+                            minPointSize={11}
                             label={{
-                                position: "right",
+                                position: "insideRight",
                                 fill: "oklch(0.985 0 0)",
-                                fontSize: 12,
+                                fontSize: 13,
                             }}
                         />
                         <Bar
                             xAxisId={1}
                             dataKey="avgSalary"
-                            fill="oklch(1 0 0 / 50%)"
+                            fill="var(--indigo-mid)"
                             radius={0}
+                            minPointSize={11}
                             label={{
-                                position: "right",
+                                position: "insideRight",
                                 fill: "oklch(0.985 0 0)",
-                                fontSize: 12,
+                                fontSize: 13,
                                 formatter: (v: unknown) =>
                                     typeof v === "number" ? formatSalary(v) : "",
                             }}

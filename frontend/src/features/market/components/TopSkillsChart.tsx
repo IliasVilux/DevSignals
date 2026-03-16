@@ -15,8 +15,8 @@ function MobileTopSkillsChart({ data }: Props) {
                 <div key={item.name}>
                     <p
                         style={{
-                            color: "oklch(0.705 0.015 286.067)",
-                            fontSize: 12,
+                            color: "oklch(0.985 0 0)",
+                            fontSize: 13,
                             marginBottom: 4,
                         }}
                     >
@@ -27,10 +27,10 @@ function MobileTopSkillsChart({ data }: Props) {
                             style={{
                                 height: 25,
                                 width: `${(item.count / maxCount) * 100}%`,
-                                background: "oklch(1 0 0 / 20%)",
+                                background: "var(--indigo-low)",
                             }}
                         />
-                        <span style={{ color: "oklch(0.985 0 0)", fontSize: 12 }}>
+                        <span style={{ color: "oklch(0.985 0 0)", fontSize: 13 }}>
                             {item.count}
                         </span>
                     </div>
@@ -48,12 +48,7 @@ export function TopSkillsChart({ data }: Props) {
             </div>
             <div className="hidden md:block">
                 <ResponsiveContainer width="100%" height={data.length * 60}>
-                    <BarChart
-                        data={data}
-                        layout="vertical"
-                        margin={{ top: 16, right: 32, bottom: 0, left: 0 }}
-                        barSize={25}
-                    >
+                    <BarChart data={data} layout="vertical" barSize={25}>
                         <XAxis type="number" hide />
                         <YAxis
                             type="category"
@@ -70,8 +65,8 @@ export function TopSkillsChart({ data }: Props) {
                                             x={0}
                                             y={y}
                                             dy={3}
-                                            fill="oklch(0.705 0.015 286.067)"
-                                            fontSize={12}
+                                            fill="oklch(0.985 0 0)"
+                                            fontSize={13}
                                             textAnchor="start"
                                         >
                                             {displayText}
@@ -90,8 +85,8 @@ export function TopSkillsChart({ data }: Props) {
                                             <TooltipTrigger asChild>
                                                 <span
                                                     style={{
-                                                        color: "oklch(0.705 0.015 286.067)",
-                                                        fontSize: 12,
+                                                        color: "oklch(0.985 0 0)",
+                                                        fontSize: 13,
                                                         cursor: "default",
                                                         display: "inline-block",
                                                         lineHeight: "20px",
@@ -113,12 +108,13 @@ export function TopSkillsChart({ data }: Props) {
                         />
                         <Bar
                             dataKey="count"
-                            fill="oklch(1 0 0 / 20%)"
+                            fill="var(--indigo-low)"
                             radius={0}
+                            minPointSize={11}
                             label={{
-                                position: "right",
+                                position: "insideRight",
                                 fill: "oklch(0.985 0 0)",
-                                fontSize: 12,
+                                fontSize: 13,
                             }}
                         />
                     </BarChart>
