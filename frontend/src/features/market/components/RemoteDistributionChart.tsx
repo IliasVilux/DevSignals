@@ -15,7 +15,7 @@ export function RemoteDistributionChart({ hybrid, remote, onsite }: Props) {
             <BarChart
                 data={data(remote, hybrid, onsite)}
                 layout="vertical"
-                margin={{ top: 16, right: 48, bottom: 0, left: 0 }}
+                margin={{ top: 16, right: 32, bottom: 0, left: 0 }}
                 barSize={25}
             >
                 <XAxis type="number" hide />
@@ -25,7 +25,8 @@ export function RemoteDistributionChart({ hybrid, remote, onsite }: Props) {
                     tick={{ fill: "oklch(0.705 0.015 286.067)", fontSize: 12 }}
                     axisLine={false}
                     tickLine={false}
-                    width={48}
+                    tickMargin={16}
+                    width={62}
                 />
                 <Bar
                     dataKey="value"

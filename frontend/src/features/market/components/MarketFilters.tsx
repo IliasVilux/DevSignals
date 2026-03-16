@@ -35,8 +35,8 @@ export function MarketFilters({ countryCode, role, onCountryChange, onRoleChange
     const freshness = formatLastIngested(freshnessDate)
 
     return (
-        <div className="flex flex-col sm:flex-row sm:items-start gap-3">
-            <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-start gap-1">
                 <div className="relative">
                     <select
                         id="countryCode"
@@ -60,25 +60,24 @@ export function MarketFilters({ countryCode, role, onCountryChange, onRoleChange
                         height={16}
                     />
                 </div>
-                {isLoading ? (
-                    <p className="text-xs text-muted-foreground mt-2">…</p>
-                ) : freshness ? (
-                    <p className="text-xs text-muted-foreground capitalize mt-2">
-                        data from {freshness}
-                    </p>
-                ) : (
-                    <p className="text-xs mt-2">&nbsp;</p>
-                )}
+
+                <input
+                    id="role"
+                    type="text"
+                    value={role}
+                    placeholder="Filter by role..."
+                    onChange={(e) => onRoleChange(e.target.value)}
+                    className="sm:w-80 border border-border text-sm text-foreground px-3 py-2 outline-none focus:border-foreground/40 placeholder:text-muted-foreground transition-colors"
+                />
             </div>
 
-            <input
-                id="role"
-                type="text"
-                value={role}
-                placeholder="Filter by role..."
-                onChange={(e) => onRoleChange(e.target.value)}
-                className="sm:w-80 border border-border text-sm text-foreground px-3 py-2 outline-none focus:border-foreground/40 placeholder:text-muted-foreground transition-colors"
-            />
+            {isLoading ? (
+                <p className="text-xs text-muted-foreground">…</p>
+            ) : freshness ? (
+                <p className="text-xs text-muted-foreground capitalize">data from {freshness}</p>
+            ) : (
+                <p className="text-xs">&nbsp;</p>
+            )}
         </div>
     )
 }
