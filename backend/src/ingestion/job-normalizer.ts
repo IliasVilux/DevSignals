@@ -7,6 +7,7 @@ export function normalizeRole(title: string): string {
   return title
     .replace(/\s*\([^)]*\)/g, "") // remove (parenthetical content)
     .replace(/\s+[-–—]\s+.+$/u, "") // remove trailing qualifiers after -, – or —
+    .replace(/\s+ID\s*\d+$/iu, "") // remove trailing IDs like "ID12345" or "ID 12345"
     .replace(/\s+/g, " ") // collapse multiple spaces
     .trim();
 }

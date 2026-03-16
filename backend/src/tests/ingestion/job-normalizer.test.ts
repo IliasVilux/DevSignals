@@ -32,6 +32,18 @@ describe("normalizeRole", () => {
     ).toBe("Ingénieur Système Citrix / Windows");
   });
 
+  it("removes trailing provider id without space", () => {
+    expect(normalizeRole("Full Stack Engineer ID51856")).toBe(
+      "Full Stack Engineer"
+    );
+  });
+
+  it("removes trailing provider id with space", () => {
+    expect(normalizeRole("Full Stack Engineer ID 51856")).toBe(
+      "Full Stack Engineer"
+    );
+  });
+
   it("leaves clean titles unchanged", () => {
     expect(normalizeRole("Software Engineer")).toBe("Software Engineer");
   });
