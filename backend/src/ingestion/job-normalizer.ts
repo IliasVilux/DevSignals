@@ -6,7 +6,7 @@ import { extractSkills } from "./skill-extractor/skill-extractor";
 export function normalizeRole(title: string): string {
   return title
     .replace(/\s*\([^)]*\)/g, "") // remove (parenthetical content)
-    .replace(/\s+-\s+.+$/, "") // remove trailing " - qualifier"
+    .replace(/\s+[-–—]\s+.+$/u, "") // remove trailing qualifiers after -, – or —
     .replace(/\s+/g, " ") // collapse multiple spaces
     .trim();
 }

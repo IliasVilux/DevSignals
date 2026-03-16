@@ -20,6 +20,18 @@ describe("normalizeRole", () => {
     );
   });
 
+  it("removes trailing en-dash qualifiers", () => {
+    expect(
+      normalizeRole("KI Prompt Engineer/AI Consultant – 100% remote")
+    ).toBe("KI Prompt Engineer/AI Consultant");
+  });
+
+  it("removes trailing en-dash qualifiers with accents", () => {
+    expect(
+      normalizeRole("Ingénieur Système Citrix / Windows – Digital Workplace")
+    ).toBe("Ingénieur Système Citrix / Windows");
+  });
+
   it("leaves clean titles unchanged", () => {
     expect(normalizeRole("Software Engineer")).toBe("Software Engineer");
   });
