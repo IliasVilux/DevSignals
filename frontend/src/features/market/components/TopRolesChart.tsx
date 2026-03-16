@@ -150,7 +150,7 @@ export function TopRolesChart({ data }: Props) {
                             dataKey="avgSalary"
                             fill="var(--indigo-mid)"
                             radius={0}
-                            minPointSize={11}
+                            minPointSize={22}
                             label={{
                                 position: "insideRight",
                                 fill: "oklch(0.985 0 0)",
