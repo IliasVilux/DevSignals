@@ -3,6 +3,14 @@ import { NormalizedJob } from "../modules/jobs/jobs.types";
 import { classifyRemoteType } from "./remote-classifier/remote-classifier";
 import { extractSkills } from "./skill-extractor/skill-extractor";
 
+export function normalizeRole(title: string): string {
+  return title
+    .replace(/\s*\([^)]*\)/g, "") // remove (parenthetical content)
+    .replace(/\s+-\s+.+$/, "") // remove trailing " - qualifier"
+    .replace(/\s+/g, " ") // collapse multiple spaces
+    .trim();
+}
+
 export function normalizeJob(
   raw: AdzunaJobRaw,
   countryCode: string
@@ -11,7 +19,7 @@ export function normalizeJob(
 
   return {
     externalId: raw.id,
-    role: raw.title,
+    role: normalizeRole(raw.title),
     description: raw.description,
     company: raw.company?.display_name,
     salaryMin: raw.salary_min ?? null,

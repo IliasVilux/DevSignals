@@ -1,7 +1,43 @@
 import { describe, it, expect } from "vitest";
-import { normalizeJob } from "../../ingestion/job-normalizer";
+import { normalizeJob, normalizeRole } from "../../ingestion/job-normalizer";
 import { classifyRemoteType } from "../../ingestion/remote-classifier/remote-classifier";
 import { RemoteType } from "../../../generated/prisma/client";
+
+describe("normalizeRole", () => {
+  it("removes parenthetical content", () => {
+    expect(normalizeRole("Backend Engineer (AdTech)")).toBe("Backend Engineer");
+  });
+
+  it("removes sector qualifiers in parentheses", () => {
+    expect(normalizeRole("Account Manager T&M (sector Retail)")).toBe(
+      "Account Manager T&M"
+    );
+  });
+
+  it("removes trailing dash qualifiers", () => {
+    expect(normalizeRole("AI Product Engineer - Operations Domain")).toBe(
+      "AI Product Engineer"
+    );
+  });
+
+  it("leaves clean titles unchanged", () => {
+    expect(normalizeRole("Software Engineer")).toBe("Software Engineer");
+  });
+
+  it("preserves hyphens within words", () => {
+    expect(normalizeRole("Full-Stack Developer")).toBe("Full-Stack Developer");
+  });
+
+  it("removes both parenthetical and dash qualifier", () => {
+    expect(normalizeRole("Software Engineer (TypeScript) - Backend")).toBe(
+      "Software Engineer"
+    );
+  });
+
+  it("trims extra whitespace", () => {
+    expect(normalizeRole("  Data Scientist  ")).toBe("Data Scientist");
+  });
+});
 
 describe("normalizeJob", () => {
   const baseRawJob = {
