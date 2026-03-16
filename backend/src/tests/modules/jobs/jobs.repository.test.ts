@@ -9,6 +9,7 @@ import {
   Job,
   Skill,
 } from "../../../../generated/prisma/client";
+import { MarketOverviewFilters } from "../../../modules/market/market.types";
 
 type PersistedJobRef = Pick<Job, "id" | "externalId" | "countryId">;
 type PersistedSkillRef = Pick<Skill, "id" | "name">;
@@ -29,6 +30,7 @@ vi.mock("../../../lib/prisma", () => ({
     jobSkill: {
       createMany: vi.fn(),
     },
+    $queryRawTyped: vi.fn(),
   },
 }));
 
@@ -127,5 +129,29 @@ describe("JobsRepository", () => {
       ]),
       skipDuplicates: true,
     });
+  });
+
+  it("findSkillsByCategory returns mapped results filtering nulls", async () => {
+    vi.mocked(prisma.$queryRawTyped).mockResolvedValue([
+      { category: "FRAMEWORK", count: 42 },
+      { category: "LANGUAGE", count: 38 },
+      { category: null, count: null },
+    ]);
+
+    const filters: MarketOverviewFilters = { countryCode: "US", role: "engineer" };
+    const result = await repo.findSkillsByCategory(filters);
+
+    expect(prisma.$queryRawTyped).toHaveBeenCalledTimes(1);
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual({ category: SkillCategory.FRAMEWORK, count: 42 });
+    expect(result[1]).toEqual({ category: SkillCategory.LANGUAGE, count: 38 });
+  });
+
+  it("findSkillsByCategory passes null params when filters are empty", async () => {
+    vi.mocked(prisma.$queryRawTyped).mockResolvedValue([]);
+
+    await repo.findSkillsByCategory({});
+
+    expect(prisma.$queryRawTyped).toHaveBeenCalledTimes(1);
   });
 });

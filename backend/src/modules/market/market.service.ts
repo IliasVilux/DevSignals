@@ -22,6 +22,7 @@ export class MarketService {
         },
         topRoles: [],
         topSkills: [],
+        skillsByCategory: [],
       };
     }
 
@@ -46,10 +47,17 @@ export class MarketService {
       (j) => j.remoteType === RemoteType.ONSITE
     ).length;
 
-    const [topRoles, topSkills] = await Promise.all([
+    const [topRoles, topSkills, rawSkillsByCategory] = await Promise.all([
       this.jobsRepository.findTopRoles(filters, 5),
       this.jobsRepository.findTopSkills(filters, 10),
+      this.jobsRepository.findSkillsByCategory(filters),
     ]);
+
+    const skillsTotal = rawSkillsByCategory.reduce((sum, r) => sum + r.count, 0);
+    const skillsByCategory = rawSkillsByCategory.map((r) => ({
+      ...r,
+      percentage: skillsTotal > 0 ? Math.round((r.count / skillsTotal) * 100) : 0,
+    }));
 
     return {
       totalJobs,
@@ -61,6 +69,7 @@ export class MarketService {
       },
       topRoles,
       topSkills,
+      skillsByCategory,
     };
   }
 }

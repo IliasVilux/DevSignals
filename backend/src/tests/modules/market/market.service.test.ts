@@ -42,11 +42,17 @@ describe("MarketService", () => {
     },
   ];
 
+  const baseRepository = () => ({
+    findJobs: vi.fn().mockResolvedValue(mockJobs),
+    findTopRoles: vi.fn().mockResolvedValue([]),
+    findTopSkills: vi.fn().mockResolvedValue([]),
+    findSkillsByCategory: vi.fn().mockResolvedValue([]),
+  });
+
   it("returns empty overview when no jobs found", async () => {
     const mockRepository = {
+      ...baseRepository(),
       findJobs: vi.fn().mockResolvedValue([]),
-      findTopRoles: vi.fn().mockResolvedValue([]),
-      findTopSkills: vi.fn().mockResolvedValue([]),
     };
     const service = new MarketService(mockRepository);
     const result = await service.getMarketOverview({});
@@ -54,24 +60,15 @@ describe("MarketService", () => {
     expect(result).toEqual({
       totalJobs: 0,
       averageSalary: null,
-      remoteDistribution: {
-        remote: 0,
-        hybrid: 0,
-        onsite: 0,
-      },
+      remoteDistribution: { remote: 0, hybrid: 0, onsite: 0 },
       topRoles: [],
       topSkills: [],
+      skillsByCategory: [],
     });
   });
 
-  it("calculates avarage salary correctly", async () => {
-    const mockRepository = {
-      findJobs: vi.fn().mockResolvedValue(mockJobs),
-      findTopRoles: vi.fn().mockResolvedValue([]),
-      findTopSkills: vi.fn().mockResolvedValue([]),
-    };
-
-    const service = new MarketService(mockRepository);
+  it("calculates average salary correctly", async () => {
+    const service = new MarketService(baseRepository());
     const result = await service.getMarketOverview({});
 
     // Average salary = (60000 + 70000 + 90000) / 3 = 73333
@@ -95,9 +92,8 @@ describe("MarketService", () => {
       },
     ];
     const mockRepository = {
+      ...baseRepository(),
       findJobs: vi.fn().mockResolvedValue(extendedMockJobs),
-      findTopRoles: vi.fn().mockResolvedValue([]),
-      findTopSkills: vi.fn().mockResolvedValue([]),
     };
 
     const service = new MarketService(mockRepository);
@@ -111,33 +107,18 @@ describe("MarketService", () => {
     });
   });
 
-  it("returns top roles normalized (same role in different casing counts as one)", async () => {
-    const jobsWithSameRole = [
-      { ...mockJobs[0], role: "Software Engineer" },
-      { ...mockJobs[1], role: "software engineer" },
-      { ...mockJobs[2], role: "Frontend Dev" },
-    ];
-
+  it("returns top roles from repository", async () => {
     const mockRepository = {
-      findJobs: vi.fn().mockResolvedValue(jobsWithSameRole),
+      ...baseRepository(),
       findTopRoles: vi.fn().mockResolvedValue([
         { role: "Software Engineer", count: 2, avgSalary: 65000 },
         { role: "Frontend Dev", count: 1, avgSalary: null },
       ]),
-      findTopSkills: vi.fn().mockResolvedValue([]),
     };
     const service = new MarketService(mockRepository);
     const result = await service.getMarketOverview({});
 
     expect(result.topRoles).toHaveLength(2);
-    const softwareEngineer = result.topRoles.find(
-      (r) => r.role.toLowerCase() === "software engineer"
-    );
-    const frontendDev = result.topRoles.find(
-      (r) => r.role.toLowerCase() === "frontend dev"
-    );
-    expect(softwareEngineer?.count).toBe(2);
-    expect(frontendDev?.count).toBe(1);
     expect(result.topRoles[0].count).toBeGreaterThanOrEqual(
       result.topRoles[1].count
     );
@@ -149,10 +130,8 @@ describe("MarketService", () => {
       { name: "React", category: SkillCategory.FRAMEWORK, count: 7 },
       { name: "PostgreSQL", category: SkillCategory.DATABASE, count: 4 },
     ];
-
     const mockRepository = {
-      findJobs: vi.fn().mockResolvedValue(mockJobs),
-      findTopRoles: vi.fn().mockResolvedValue([]),
+      ...baseRepository(),
       findTopSkills: vi.fn().mockResolvedValue(mockSkills),
     };
 
@@ -168,5 +147,36 @@ describe("MarketService", () => {
     expect(result.topSkills[0].count).toBeGreaterThanOrEqual(
       result.topSkills[1].count
     );
+  });
+
+  it("returns skills by category with computed percentages", async () => {
+    const mockRepository = {
+      ...baseRepository(),
+      findSkillsByCategory: vi.fn().mockResolvedValue([
+        { category: SkillCategory.FRAMEWORK, count: 50 },
+        { category: SkillCategory.LANGUAGE, count: 30 },
+        { category: SkillCategory.DATABASE, count: 20 },
+      ]),
+    };
+
+    const service = new MarketService(mockRepository);
+    const result = await service.getMarketOverview({});
+
+    expect(result.skillsByCategory).toHaveLength(3);
+    expect(result.skillsByCategory[0]).toEqual({
+      category: SkillCategory.FRAMEWORK,
+      count: 50,
+      percentage: 50,
+    });
+    expect(result.skillsByCategory[1]).toEqual({
+      category: SkillCategory.LANGUAGE,
+      count: 30,
+      percentage: 30,
+    });
+    expect(result.skillsByCategory[2]).toEqual({
+      category: SkillCategory.DATABASE,
+      count: 20,
+      percentage: 20,
+    });
   });
 });

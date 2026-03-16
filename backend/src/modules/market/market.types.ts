@@ -1,4 +1,8 @@
-import { TopRoles, TopSkill } from "../jobs/jobs.types";
+import { SkillsByCategory, TopRoles, TopSkill } from "../jobs/jobs.types";
+
+export interface SkillCategoryBreakdown extends SkillsByCategory {
+  percentage: number;
+}
 
 export interface MarketOverviewFilters {
   countryCode?: string;
@@ -17,4 +21,5 @@ export interface MarketOverview {
   remoteDistribution: RemoteDistrubution;
   topRoles: TopRoles[];
   topSkills: TopSkill[];
+  skillsByCategory: SkillCategoryBreakdown[];
 }
