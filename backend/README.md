@@ -61,8 +61,8 @@ Separation is strict: controllers and services use **typed DTOs** (e.g. `MarketO
 - **Data freshness tracking**  
   `Country` has a `lastIngestedAt: DateTime?` field updated by the ingestion pipeline after each successful run. Exposed via `GET /api/countries` so the frontend can show users how recent the data is. The `formatLastIngested()` helper on the frontend converts the ISO date to a human-readable relative string (e.g. "3 hours ago").
 
-- **Scheduled ingestion (planned — Phase B heavy)**  
-  `node-cron` will register two background tasks in `src/ingestion/scheduler.ts`: a daily ingest (3am) and a weekly cleanup that deletes jobs older than 30 days. `startScheduler()` will be called from `server.ts` at startup. BullMQ (Redis-based) was considered but deferred — `node-cron` is sufficient for current scale and avoids extra infrastructure dependency.
+- **Scheduled ingestion**  
+  `node-cron` registers two background tasks in `src/ingestion/scheduler.ts`: a daily ingest (3am) and a weekly cleanup that deletes jobs older than 30 days. `startScheduler()` is called from `server.ts` at startup. BullMQ (Redis-based) was considered but deferred — `node-cron` is sufficient for current scale and avoids extra infrastructure dependency.
 
 ---
 

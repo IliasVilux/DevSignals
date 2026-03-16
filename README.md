@@ -16,9 +16,9 @@ It does **not** show job listings; it aggregates external job data and turns it 
 - `frontend/` – React + TypeScript + Vite + TanStack Query + Recharts
 - `docs/` – project context and architecture notes
 
-## Current Phase – Phase B light complete, Phase B heavy next
+## Current Phase – MVP v0.5 in progress
 
-The backend provides a clean, testable analytics API with rate limiting and data freshness tracking. The frontend consumes it to display meaningful market insights with per-role salary data.
+The backend provides a clean, testable analytics API with rate limiting, data freshness tracking, scheduled ingestion, and role title normalization. The frontend consumes it to display meaningful market insights with per-role salary data, loading skeletons, and empty states.
 
 ### Backend
 
@@ -26,8 +26,8 @@ The backend provides a clean, testable analytics API with rate limiting and data
 - Normalization of external job data into an internal `Job` model (including improved remote type detection)
 - **Skills extraction pipeline**: regex-based extractor identifies ~70 technologies from job text and persists them to a `Skill`/`JobSkill` graph linked to every ingested job
 - Aggregation logic exposed through a market overview endpoint, including top skills per country/role and **average salary per role**
-- **Rate limiting**: 100 req/IP/15min on all `/api/*` routes via `express-rate-limit`
-- **Data freshness**: `lastIngestedAt` timestamp per country, updated after each ingestion run and exposed via the countries endpoint
+- **Scheduled ingestion**: `node-cron` runs a daily ingest (3am) and a weekly cleanup that deletes jobs older than 30 days. `startScheduler()` is called from `server.ts` at startup
+- **Role title normalization**: `normalizeRole()` strips parenthetical content and trailing dash qualifiers from Adzuna titles before persisting (e.g. `"Backend Engineer (AdTech) - Ops"` → `"Backend Engineer"`)
 
 ### Frontend
 
