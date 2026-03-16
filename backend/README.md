@@ -136,8 +136,9 @@ From `backend/`:
 - `pnpm test:watch` – run tests in watch mode
 - `pnpm prisma:push` – apply Prisma schema to the database
 - `pnpm prisma:seed` – seed the database with some countries
-- `pnpm ingest` – run the job ingestion pipeline (`src/ingestion/ingest-jobs.ts`) for all countries
-- `pnpm ingest <countryCode>` – run the job ingestion pipeline (`src/ingestion/ingest-jobs.ts`) for a specific country
+- `pnpm ingest` – run the ingestion pipeline for all countries, fetching all jobs from the last 7 days (paginated)
+- `pnpm ingest <countryCode>` – same as above, but for a specific country
+- `pnpm ingest --max-days-old 14` – ingest jobs from the last 14 days (supports `--max-days-old=14` too)
 
 ## File Structure
 

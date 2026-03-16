@@ -38,17 +38,29 @@ export interface AdzunaJobRaw {
 
 const BASE_URL = "http://api.adzuna.com/v1/api/jobs";
 
+export interface AdzunaFetchOptions {
+  page?: number;
+  resultsPerPage?: number;
+  maxDaysOld?: number;
+}
+
 export async function fetchJobsFromAdzuna(
   countryCode: string,
-  page = 1
+  options: AdzunaFetchOptions = {}
 ): Promise<AdzunaJobRaw[]> {
+  const page = options.page ?? 1;
+  const resultsPerPage = options.resultsPerPage ?? 50;
+
   const url = new URL(
     `${BASE_URL}/${countryCode.toLowerCase()}/search/${page}`
   );
   url.searchParams.set("app_id", env.ADZUNA_APP_ID);
   url.searchParams.set("app_key", env.ADZUNA_API_KEY);
   url.searchParams.set("category", "it-jobs");
-  url.searchParams.set("results_per_page", "20");
+  url.searchParams.set("results_per_page", String(resultsPerPage));
+  if (typeof options.maxDaysOld === "number") {
+    url.searchParams.set("max_days_old", String(options.maxDaysOld));
+  }
   url.searchParams.set("content-type", "application/json");
 
   const response = await fetch(url);
