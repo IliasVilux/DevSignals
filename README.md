@@ -16,9 +16,9 @@ It does **not** show job listings; it aggregates external job data and turns it 
 - `frontend/` – React + TypeScript + Vite + TanStack Query + Recharts
 - `docs/` – project context and architecture notes
 
-## Current Phase – MVP v0.5 in progress
+## Current Phase – MVP v0.5 completed ✅
 
-The backend provides a clean, testable analytics API with rate limiting, data freshness tracking, scheduled ingestion, and role title normalization. The frontend consumes it to display meaningful market insights with per-role salary data, loading skeletons, and empty states.
+The backend provides a clean, testable analytics API with rate limiting, data freshness tracking, scheduled ingestion, and role title normalization. The frontend consumes it to display meaningful market insights with per-role salary data, skill category breakdowns, loading skeletons, and empty states.
 
 ### Backend
 
@@ -37,9 +37,10 @@ The backend provides a clean, testable analytics API with rate limiting, data fr
 - Country select populated dynamically from the API
 - **Data freshness label**: shows how long ago data was ingested for the selected country (e.g. "data from 3 hours ago")
 - Role text input with debounce to avoid unnecessary requests
-- Stats display: total jobs, average salary, remote/hybrid/onsite percentages, top roles and top skills
-- Recharts horizontal bar charts for remote distribution, top skills
+- Stats display: total jobs, average salary, remote/hybrid/onsite percentages, top roles, top skills, and skill category breakdowns
+- Recharts horizontal bar charts for remote distribution, top skills, and per-category skill breakdown
 - **Dual-bar TopRolesChart**: count + average salary per role on independent axes
+- **SkillCategoryBreakdown**: per-category sections with desktop chart + mobile list, showing top 5 skills and how often each category appears in job postings
 
 ### Current API
 

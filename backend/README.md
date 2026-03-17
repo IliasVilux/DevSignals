@@ -41,7 +41,7 @@ Separation is strict: controllers and services use **typed DTOs** (e.g. `MarketO
   The `cors` middleware allows requests from the frontend (`http://localhost:5173` in dev, `https://dev-signals.vercel.app` in production). Configured in `src/app.ts` with an allowed-origins list.
 
 - **Prisma TypedSQL for aggregations**
-  Top-roles, top-skills, and skills-by-category aggregations are done in the database via custom SQL queries (`prisma/sql/getTopRoles.sql`, `prisma/sql/getTopSkills.sql`, `prisma/sql/getSkillsByCategory.sql`). Prisma's `typedSql` preview feature (requires `pnpm prisma generate --sql` in v7.4.0) generates typed bindings; repositories use `prisma.$queryRawTyped(...)`. Roles are grouped by `lower(trim(role))`; skills by `Skill.id`; categories by `Skill.category`. The `category` enum column is cast to `::text` to avoid Prisma's enum inference limitation, then cast back to `SkillCategory` in TypeScript. Percentage per category is computed in the service layer from the total count — not in SQL — to keep aggregation logic in the domain layer.
+  Top-roles, top-skills, and skills-by-category aggregations are done in the database via custom SQL queries (`prisma/sql/getTopRoles.sql`, `prisma/sql/getTopSkills.sql`, `prisma/sql/getTopSkillsByCategory.sql`). Prisma's `typedSql` preview feature (requires `pnpm prisma generate --sql` in v7.4.0) generates typed bindings; repositories use `prisma.$queryRawTyped(...)`. Roles are grouped by `lower(trim(role))`; skills by `Skill.id`; categories by `Skill.category`. The `category` enum column is cast to `::text` to avoid Prisma's enum inference limitation, then cast back to `SkillCategory` in TypeScript. `getTopSkillsByCategory.sql` returns the top 5 skills per category using a window function (`RANK() OVER (PARTITION BY category ORDER BY skill_count DESC)`); percentage per category is computed in the service layer from the total count — not in SQL — to keep aggregation logic in the domain layer.
 
 - **Skills extraction pipeline**  
   The normalizer calls `extractSkills(title, description)` before persisting any job. The extractor uses pre-compiled regex patterns (built at module load time for performance) against a curated dictionary of ~70 technologies across 5 categories. Ambiguous short aliases (e.g. "R", "Go") are replaced with unambiguous phrases ("r programming", "golang"). Extracted skills are bulk-upserted in a 5-query batch: job insert → re-fetch IDs → skill upsert → skill re-fetch → jobSkill insert.
@@ -95,7 +95,7 @@ Salary aggregation uses `salaryMin`/`salaryMax`: when both exist we use the midp
 - `remoteDistribution: { remote: number, hybrid: number, onsite: number }` (percentages 0–100, rounded)
 - `topRoles: { role: string, count: number, avgSalary: number | null }[]` (top 5 roles; `avgSalary` is null when salary data is unavailable for that role)
 - `topSkills: { name: string, category: SkillCategory, count: number }[]` (top 10 skills by count)
-- `skillCategoryBreakdown: { category: SkillCategory, count: number, percentage: number }[]` (skill count and share per category)
+- `skillCategoryBreakdown: { category: SkillCategory, count: number, percentage: number, skills: { name: string, category: SkillCategory, count: number }[] }[]` (top 5 skills per category, with total count and share per category)
 
 Omission of both filters returns an overview over all jobs in the database.
 

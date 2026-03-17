@@ -74,11 +74,12 @@ src/
 ├── features/
 │   └── market/
 │       ├── components/
-│       │   ├── index.ts                    # Component exports
-│       │   ├── MarketFilters.tsx           # Country select + role text input + freshness label
-│       │   ├── RemoteDistributionChart.tsx # Horizontal bar chart: remote/hybrid/onsite
-│       │   ├── TopRolesChart.tsx           # Dual-bar chart: count + avgSalary per role
-│       │   └── TopSkillsChart.tsx          # Horizontal bar chart: top 10 skills by category
+│       │   ├── index.ts                       # Component exports
+│       │   ├── MarketFilters.tsx              # Country select + role text input + freshness label
+│       │   ├── RemoteDistributionChart.tsx    # Horizontal bar chart: remote/hybrid/onsite
+│       │   ├── SkillCategoryBreakdown.tsx     # Per-category section: desktop chart + mobile list
+│       │   ├── TopRolesChart.tsx              # Dual-bar chart: count + avgSalary per role
+│       │   └── TopSkillsChart.tsx             # Horizontal bar chart: top 10 skills by category
 │       ├── hooks/
 │       │   ├── index.ts                   # Hook exports
 │       │   ├── useCountries.ts            # Fetches country list for filter select
@@ -148,6 +149,7 @@ The `MarketOverviewPage` orchestrates the dashboard:
 - `RemoteDistributionChart` — horizontal bar chart showing remote/hybrid/onsite distribution
 - `TopRolesChart` — dual-bar horizontal chart: **count** (white/20% opacity) + **average salary** (white/50% opacity) per role. Each bar has an independent axis so both series scale correctly regardless of magnitude. Salary label formatted as `Xk`.
 - `TopSkillsChart` — horizontal bar chart showing top 10 skills by count, colored by category
+- `SkillCategoryBreakdown` — one section per skill category showing the top 5 skills within it. Desktop: Recharts horizontal bar chart. Mobile: text list with inline percentage bars. Header shows category label, job count, and "found in X% of jobs". Rendered in a loop from `MarketOverviewPage` — each category is an independent section, not nested inside a container component.
 
 ---
 
@@ -157,7 +159,7 @@ Consumed from `shared/api/`:
 
 | Endpoint                   | Hook                | Description                                                                                            |
 | -------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------ |
-| `GET /api/market/overview` | `useMarketOverview` | Returns `totalJobs`, `averageSalary`, `remoteDistribution`, `topRoles` (with `avgSalary`), `topSkills` |
+| `GET /api/market/overview` | `useMarketOverview` | Returns `totalJobs`, `averageSalary`, `remoteDistribution`, `topRoles` (with `avgSalary`), `topSkills`, `skillCategoryBreakdown` (top 5 skills per category with count and percentage) |
 | `GET /api/countries`       | `useCountries`      | Returns `{ id, code, name, lastIngestedAt }[]` for filter select and freshness label                   |
 
 Query params forwarded by `useMarketOverview`: `countryCode`, `role` (debounced).
