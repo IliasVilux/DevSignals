@@ -26,7 +26,7 @@ export interface TopSkill {
   count: number;
 }
 
-export interface SkillsByCategory {
+export interface SkillCategoryBreakdown {
   category: SkillCategory;
   count: number;
   skills: TopSkill[];

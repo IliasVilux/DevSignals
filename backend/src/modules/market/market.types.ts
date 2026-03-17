@@ -1,6 +1,6 @@
-import { SkillsByCategory, TopRoles, TopSkill } from "../jobs/jobs.types";
+import { SkillCategoryBreakdown as SkillCategoryBreakdownBase, TopRoles, TopSkill } from "../jobs/jobs.types";
 
-export interface SkillCategoryBreakdown extends SkillsByCategory {
+export interface SkillCategoryBreakdown extends SkillCategoryBreakdownBase {
   percentage: number;
 }
 
@@ -21,5 +21,5 @@ export interface MarketOverview {
   remoteDistribution: RemoteDistrubution;
   topRoles: TopRoles[];
   topSkills: TopSkill[];
-  skillsByCategory: SkillCategoryBreakdown[];
+  skillCategoryBreakdown: SkillCategoryBreakdown[];
 }

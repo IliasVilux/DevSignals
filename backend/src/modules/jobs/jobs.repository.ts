@@ -2,7 +2,7 @@ import { prisma } from "../../lib/prisma";
 import { MarketOverviewFilters } from "../market/market.types";
 import {
   NormalizedJob,
-  SkillsByCategory,
+  SkillCategoryBreakdown,
   TopRoles,
   TopSkill,
 } from "./jobs.types";
@@ -23,9 +23,9 @@ export interface IJobsRepository {
     filters: MarketOverviewFilters,
     limit: number
   ): Promise<TopSkill[]>;
-  findTopSkillsByCategory(
+  findSkillCategoryBreakdown(
     filters: MarketOverviewFilters
-  ): Promise<SkillsByCategory[]>;
+  ): Promise<SkillCategoryBreakdown[]>;
 }
 
 export class JobsRepository implements IJobsRepository {
@@ -165,9 +165,9 @@ export class JobsRepository implements IJobsRepository {
       .map((r) => ({ ...r, category: r.category as SkillCategory }));
   }
 
-  async findTopSkillsByCategory(
+  async findSkillCategoryBreakdown(
     filters: MarketOverviewFilters
-  ): Promise<SkillsByCategory[]> {
+  ): Promise<SkillCategoryBreakdown[]> {
     const countryParam = filters.countryCode
       ? filters.countryCode.toUpperCase()
       : null;
@@ -192,7 +192,7 @@ export class JobsRepository implements IJobsRepository {
         r.category_count !== null
     );
 
-    const categoryMap = new Map<string, SkillsByCategory>();
+    const categoryMap = new Map<string, SkillCategoryBreakdown>();
 
     for (const r of validRows) {
       if (!categoryMap.has(r.category)) {

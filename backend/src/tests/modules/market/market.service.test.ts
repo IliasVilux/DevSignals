@@ -46,7 +46,7 @@ describe("MarketService", () => {
     findJobs: vi.fn().mockResolvedValue(mockJobs),
     findTopRoles: vi.fn().mockResolvedValue([]),
     findTopSkills: vi.fn().mockResolvedValue([]),
-    findTopSkillsByCategory: vi.fn().mockResolvedValue([]),
+    findSkillCategoryBreakdown: vi.fn().mockResolvedValue([]),
   });
 
   it("returns empty overview when no jobs found", async () => {
@@ -63,7 +63,7 @@ describe("MarketService", () => {
       remoteDistribution: { remote: 0, hybrid: 0, onsite: 0 },
       topRoles: [],
       topSkills: [],
-      skillsByCategory: [],
+      skillCategoryBreakdown: [],
     });
   });
 
@@ -152,7 +152,7 @@ describe("MarketService", () => {
   it("returns skills by category with computed percentages and skills array", async () => {
     const mockRepository = {
       ...baseRepository(),
-      findTopSkillsByCategory: vi.fn().mockResolvedValue([
+      findSkillCategoryBreakdown: vi.fn().mockResolvedValue([
         {
           category: SkillCategory.FRAMEWORK,
           count: 50,
@@ -174,20 +174,20 @@ describe("MarketService", () => {
     const service = new MarketService(mockRepository);
     const result = await service.getMarketOverview({});
 
-    expect(result.skillsByCategory).toHaveLength(3);
-    expect(result.skillsByCategory[0]).toEqual({
+    expect(result.skillCategoryBreakdown).toHaveLength(3);
+    expect(result.skillCategoryBreakdown[0]).toEqual({
       category: SkillCategory.FRAMEWORK,
       count: 50,
       percentage: 50,
       skills: [{ name: "React", category: SkillCategory.FRAMEWORK, count: 30 }],
     });
-    expect(result.skillsByCategory[1]).toEqual({
+    expect(result.skillCategoryBreakdown[1]).toEqual({
       category: SkillCategory.LANGUAGE,
       count: 30,
       percentage: 30,
       skills: [{ name: "TypeScript", category: SkillCategory.LANGUAGE, count: 30 }],
     });
-    expect(result.skillsByCategory[2]).toEqual({
+    expect(result.skillCategoryBreakdown[2]).toEqual({
       category: SkillCategory.DATABASE,
       count: 20,
       percentage: 20,

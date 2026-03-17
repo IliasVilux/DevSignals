@@ -131,7 +131,7 @@ describe("JobsRepository", () => {
     });
   });
 
-  it("findTopSkillsByCategory groups flat rows into categories with skills", async () => {
+  it("findSkillCategoryBreakdown groups flat rows into categories with skills", async () => {
     vi.mocked(prisma.$queryRawTyped).mockResolvedValue([
       { name: "React", category: "FRAMEWORK", skill_count: 30, category_count: 42 },
       { name: "Vue", category: "FRAMEWORK", skill_count: 12, category_count: 42 },
@@ -140,7 +140,7 @@ describe("JobsRepository", () => {
     ]);
 
     const filters: MarketOverviewFilters = { countryCode: "US", role: "engineer" };
-    const result = await repo.findTopSkillsByCategory(filters);
+    const result = await repo.findSkillCategoryBreakdown(filters);
 
     expect(prisma.$queryRawTyped).toHaveBeenCalledTimes(1);
     expect(result).toHaveLength(2);
@@ -159,10 +159,10 @@ describe("JobsRepository", () => {
     });
   });
 
-  it("findTopSkillsByCategory returns empty array when no rows", async () => {
+  it("findSkillCategoryBreakdown returns empty array when no rows", async () => {
     vi.mocked(prisma.$queryRawTyped).mockResolvedValue([]);
 
-    const result = await repo.findTopSkillsByCategory({});
+    const result = await repo.findSkillCategoryBreakdown({});
 
     expect(prisma.$queryRawTyped).toHaveBeenCalledTimes(1);
     expect(result).toHaveLength(0);

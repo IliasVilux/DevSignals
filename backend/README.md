@@ -95,7 +95,7 @@ Salary aggregation uses `salaryMin`/`salaryMax`: when both exist we use the midp
 - `remoteDistribution: { remote: number, hybrid: number, onsite: number }` (percentages 0–100, rounded)
 - `topRoles: { role: string, count: number, avgSalary: number | null }[]` (top 5 roles; `avgSalary` is null when salary data is unavailable for that role)
 - `topSkills: { name: string, category: SkillCategory, count: number }[]` (top 10 skills by count)
-- `skillsByCategory: { category: SkillCategory, count: number, percentage: number }[]` (skill count and share per category)
+- `skillCategoryBreakdown: { category: SkillCategory, count: number, percentage: number }[]` (skill count and share per category)
 
 Omission of both filters returns an overview over all jobs in the database.
 
@@ -150,7 +150,7 @@ backend/
 │   ├── sql/
 │   │   ├── getTopRoles.sql           # TypedSQL query: top N roles by count, grouped by lower(trim(role))
 │   │   ├── getTopSkills.sql          # TypedSQL query: top N skills by count with category
-│   │   └── getSkillsByCategory.sql   # TypedSQL query: skill count grouped by category
+│   │   └── getTopSkillsByCategory.sql   # TypedSQL query: top 5 skills per category with category totals
 │   ├── schema.prisma              # Database schema (Job, Country, etc.)
 │   └── seed.ts                    # Seed script to seed the database with some countries
 └── src/
@@ -226,12 +226,12 @@ backend/
 5. **Service layer** – `src/modules/market/market.service.ts`
    - Core **aggregation logic**
    - Uses `JobsRepository.findJobs` for total count, salary, remote distribution
-   - Uses `Promise.all` to run `findTopRoles`, `findTopSkills`, and `findSkillsByCategory` in parallel (all TypedSQL in DB)
+   - Uses `Promise.all` to run `findTopRoles`, `findTopSkills`, and `findSkillCategoryBreakdown` in parallel (all TypedSQL in DB)
    - Computes `percentage` per skill category from the total count
-   - Returns `MarketOverview` with all fields including `topSkills` and `skillsByCategory`
+   - Returns `MarketOverview` with all fields including `topSkills` and `skillCategoryBreakdown`
 
 6. **Repository layer** – `src/modules/*/*.repository.ts`
-   - `JobsRepository`: `findJobs` (Prisma `findMany`), `findTopRoles`, `findTopSkills`, and `findSkillsByCategory` (all `$queryRawTyped`)
+   - `JobsRepository`: `findJobs` (Prisma `findMany`), `findTopRoles`, `findTopSkills`, and `findSkillCategoryBreakdown` (all `$queryRawTyped`)
    - `CountriesRepository`: `getAllCountries`, `findByCode`
    - All persistence behind these interfaces
 
