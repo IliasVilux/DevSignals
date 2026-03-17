@@ -62,3 +62,7 @@ dist/
 # Docker
 .docker/
 docker-compose.override.yml
+
+# Skills
+.agents/
+.claude/
