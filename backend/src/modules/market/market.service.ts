@@ -50,7 +50,7 @@ export class MarketService {
     const [topRoles, topSkills, rawSkillsByCategory] = await Promise.all([
       this.jobsRepository.findTopRoles(filters, 5),
       this.jobsRepository.findTopSkills(filters, 10),
-      this.jobsRepository.findSkillsByCategory(filters),
+      this.jobsRepository.findTopSkillsByCategory(filters),
     ]);
 
     const skillsTotal = rawSkillsByCategory.reduce((sum, r) => sum + r.count, 0);

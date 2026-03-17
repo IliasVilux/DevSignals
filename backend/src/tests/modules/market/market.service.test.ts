@@ -46,7 +46,7 @@ describe("MarketService", () => {
     findJobs: vi.fn().mockResolvedValue(mockJobs),
     findTopRoles: vi.fn().mockResolvedValue([]),
     findTopSkills: vi.fn().mockResolvedValue([]),
-    findSkillsByCategory: vi.fn().mockResolvedValue([]),
+    findTopSkillsByCategory: vi.fn().mockResolvedValue([]),
   });
 
   it("returns empty overview when no jobs found", async () => {
@@ -149,13 +149,25 @@ describe("MarketService", () => {
     );
   });
 
-  it("returns skills by category with computed percentages", async () => {
+  it("returns skills by category with computed percentages and skills array", async () => {
     const mockRepository = {
       ...baseRepository(),
-      findSkillsByCategory: vi.fn().mockResolvedValue([
-        { category: SkillCategory.FRAMEWORK, count: 50 },
-        { category: SkillCategory.LANGUAGE, count: 30 },
-        { category: SkillCategory.DATABASE, count: 20 },
+      findTopSkillsByCategory: vi.fn().mockResolvedValue([
+        {
+          category: SkillCategory.FRAMEWORK,
+          count: 50,
+          skills: [{ name: "React", category: SkillCategory.FRAMEWORK, count: 30 }],
+        },
+        {
+          category: SkillCategory.LANGUAGE,
+          count: 30,
+          skills: [{ name: "TypeScript", category: SkillCategory.LANGUAGE, count: 30 }],
+        },
+        {
+          category: SkillCategory.DATABASE,
+          count: 20,
+          skills: [{ name: "PostgreSQL", category: SkillCategory.DATABASE, count: 20 }],
+        },
       ]),
     };
 
@@ -167,16 +179,19 @@ describe("MarketService", () => {
       category: SkillCategory.FRAMEWORK,
       count: 50,
       percentage: 50,
+      skills: [{ name: "React", category: SkillCategory.FRAMEWORK, count: 30 }],
     });
     expect(result.skillsByCategory[1]).toEqual({
       category: SkillCategory.LANGUAGE,
       count: 30,
       percentage: 30,
+      skills: [{ name: "TypeScript", category: SkillCategory.LANGUAGE, count: 30 }],
     });
     expect(result.skillsByCategory[2]).toEqual({
       category: SkillCategory.DATABASE,
       count: 20,
       percentage: 20,
+      skills: [{ name: "PostgreSQL", category: SkillCategory.DATABASE, count: 20 }],
     });
   });
 });

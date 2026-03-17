@@ -1,8 +1,17 @@
 import { prisma } from "../../lib/prisma";
 import { MarketOverviewFilters } from "../market/market.types";
-import { NormalizedJob, SkillsByCategory, TopRoles, TopSkill } from "./jobs.types";
+import {
+  NormalizedJob,
+  SkillsByCategory,
+  TopRoles,
+  TopSkill,
+} from "./jobs.types";
 import { Job, SkillCategory } from "../../../generated/prisma/client";
-import { getSkillsByCategory, getTopRoles, getTopSkills } from "../../../generated/prisma/sql";
+import {
+  getTopRoles,
+  getTopSkills,
+  getTopSkillsByCategory,
+} from "../../../generated/prisma/sql";
 
 export interface IJobsRepository {
   findJobs(filters?: MarketOverviewFilters): Promise<Job[]>;
@@ -14,7 +23,7 @@ export interface IJobsRepository {
     filters: MarketOverviewFilters,
     limit: number
   ): Promise<TopSkill[]>;
-  findSkillsByCategory(
+  findTopSkillsByCategory(
     filters: MarketOverviewFilters
   ): Promise<SkillsByCategory[]>;
 }
@@ -156,7 +165,7 @@ export class JobsRepository implements IJobsRepository {
       .map((r) => ({ ...r, category: r.category as SkillCategory }));
   }
 
-  async findSkillsByCategory(
+  async findTopSkillsByCategory(
     filters: MarketOverviewFilters
   ): Promise<SkillsByCategory[]> {
     const countryParam = filters.countryCode
@@ -165,14 +174,41 @@ export class JobsRepository implements IJobsRepository {
     const roleParam = filters.role ?? null;
 
     const rows = await prisma.$queryRawTyped(
-      getSkillsByCategory(countryParam, roleParam)
+      getTopSkillsByCategory(countryParam, roleParam)
     );
 
-    return rows
-      .filter(
-        (r): r is { category: string; count: number } =>
-          r.category !== null && r.count !== null
-      )
-      .map((r) => ({ ...r, category: r.category as SkillCategory }));
+    const validRows = rows.filter(
+      (
+        r
+      ): r is {
+        name: string;
+        category: string;
+        skill_count: number;
+        category_count: number;
+      } =>
+        r.name !== null &&
+        r.category !== null &&
+        r.skill_count !== null &&
+        r.category_count !== null
+    );
+
+    const categoryMap = new Map<string, SkillsByCategory>();
+
+    for (const r of validRows) {
+      if (!categoryMap.has(r.category)) {
+        categoryMap.set(r.category, {
+          category: r.category as SkillCategory,
+          count: r.category_count,
+          skills: [],
+        });
+      }
+      categoryMap.get(r.category)!.skills.push({
+        name: r.name,
+        category: r.category as SkillCategory,
+        count: r.skill_count,
+      });
+    }
+
+    return Array.from(categoryMap.values());
   }
 }

@@ -131,27 +131,40 @@ describe("JobsRepository", () => {
     });
   });
 
-  it("findSkillsByCategory returns mapped results filtering nulls", async () => {
+  it("findTopSkillsByCategory groups flat rows into categories with skills", async () => {
     vi.mocked(prisma.$queryRawTyped).mockResolvedValue([
-      { category: "FRAMEWORK", count: 42 },
-      { category: "LANGUAGE", count: 38 },
-      { category: null, count: null },
+      { name: "React", category: "FRAMEWORK", skill_count: 30, category_count: 42 },
+      { name: "Vue", category: "FRAMEWORK", skill_count: 12, category_count: 42 },
+      { name: "TypeScript", category: "LANGUAGE", skill_count: 38, category_count: 38 },
+      { name: null, category: null, skill_count: null, category_count: null },
     ]);
 
     const filters: MarketOverviewFilters = { countryCode: "US", role: "engineer" };
-    const result = await repo.findSkillsByCategory(filters);
+    const result = await repo.findTopSkillsByCategory(filters);
 
     expect(prisma.$queryRawTyped).toHaveBeenCalledTimes(1);
     expect(result).toHaveLength(2);
-    expect(result[0]).toEqual({ category: SkillCategory.FRAMEWORK, count: 42 });
-    expect(result[1]).toEqual({ category: SkillCategory.LANGUAGE, count: 38 });
+    expect(result[0]).toEqual({
+      category: SkillCategory.FRAMEWORK,
+      count: 42,
+      skills: [
+        { name: "React", category: SkillCategory.FRAMEWORK, count: 30 },
+        { name: "Vue", category: SkillCategory.FRAMEWORK, count: 12 },
+      ],
+    });
+    expect(result[1]).toEqual({
+      category: SkillCategory.LANGUAGE,
+      count: 38,
+      skills: [{ name: "TypeScript", category: SkillCategory.LANGUAGE, count: 38 }],
+    });
   });
 
-  it("findSkillsByCategory passes null params when filters are empty", async () => {
+  it("findTopSkillsByCategory returns empty array when no rows", async () => {
     vi.mocked(prisma.$queryRawTyped).mockResolvedValue([]);
 
-    await repo.findSkillsByCategory({});
+    const result = await repo.findTopSkillsByCategory({});
 
     expect(prisma.$queryRawTyped).toHaveBeenCalledTimes(1);
+    expect(result).toHaveLength(0);
   });
 });
