@@ -53,6 +53,7 @@ The backend provides a clean, testable analytics API with rate limiting, data fr
     - Remote / Hybrid / Onsite distribution (percentages)
     - Top 5 roles with count and average salary (aggregated via Prisma TypedSQL)
     - Top 10 skills with category (aggregated via Prisma TypedSQL)
+    - Skills by category breakdown with count and percentage share
 - `GET /api/countries` – list all countries (`{ id, code, name, lastIngestedAt }[]`)
 - `GET /api/countries/:code` – get country by code (e.g. `GB`, `ES`)
 

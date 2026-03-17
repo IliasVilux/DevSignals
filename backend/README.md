@@ -40,8 +40,8 @@ Separation is strict: controllers and services use **typed DTOs** (e.g. `MarketO
 - **CORS**  
   The `cors` middleware allows requests from the frontend (`http://localhost:5173` in dev, `https://dev-signals.vercel.app` in production). Configured in `src/app.ts` with an allowed-origins list.
 
-- **Prisma TypedSQL for aggregations**  
-  Both top-roles and top-skills aggregations are done in the database via custom SQL queries (`prisma/sql/getTopRoles.sql`, `prisma/sql/getTopSkills.sql`). Prisma's `typedSql` preview feature (requires `pnpm prisma generate --sql` in v7.4.0) generates typed bindings; repositories use `prisma.$queryRawTyped(...)`. Roles are grouped by `lower(trim(role))`; skills by `Skill.id`. The `category` enum column in `getTopSkills.sql` is cast to `::text` to avoid Prisma's enum inference limitation, then cast back to `SkillCategory` in TypeScript.
+- **Prisma TypedSQL for aggregations**
+  Top-roles, top-skills, and skills-by-category aggregations are done in the database via custom SQL queries (`prisma/sql/getTopRoles.sql`, `prisma/sql/getTopSkills.sql`, `prisma/sql/getSkillsByCategory.sql`). Prisma's `typedSql` preview feature (requires `pnpm prisma generate --sql` in v7.4.0) generates typed bindings; repositories use `prisma.$queryRawTyped(...)`. Roles are grouped by `lower(trim(role))`; skills by `Skill.id`; categories by `Skill.category`. The `category` enum column is cast to `::text` to avoid Prisma's enum inference limitation, then cast back to `SkillCategory` in TypeScript. Percentage per category is computed in the service layer from the total count — not in SQL — to keep aggregation logic in the domain layer.
 
 - **Skills extraction pipeline**  
   The normalizer calls `extractSkills(title, description)` before persisting any job. The extractor uses pre-compiled regex patterns (built at module load time for performance) against a curated dictionary of ~70 technologies across 5 categories. Ambiguous short aliases (e.g. "R", "Go") are replaced with unambiguous phrases ("r programming", "golang"). Extracted skills are bulk-upserted in a 5-query batch: job insert → re-fetch IDs → skill upsert → skill re-fetch → jobSkill insert.
@@ -95,6 +95,7 @@ Salary aggregation uses `salaryMin`/`salaryMax`: when both exist we use the midp
 - `remoteDistribution: { remote: number, hybrid: number, onsite: number }` (percentages 0–100, rounded)
 - `topRoles: { role: string, count: number, avgSalary: number | null }[]` (top 5 roles; `avgSalary` is null when salary data is unavailable for that role)
 - `topSkills: { name: string, category: SkillCategory, count: number }[]` (top 10 skills by count)
+- `skillsByCategory: { category: SkillCategory, count: number, percentage: number }[]` (skill count and share per category)
 
 Omission of both filters returns an overview over all jobs in the database.
 
@@ -147,7 +148,9 @@ backend/
 ├── generated/prisma/              # Generated Prisma client and types (incl. sql bindings)
 ├── prisma/
 │   ├── sql/
-│   │   └── getTopRoles.sql        # TypedSQL query: top N roles by count, grouped by lower(trim(role))
+│   │   ├── getTopRoles.sql           # TypedSQL query: top N roles by count, grouped by lower(trim(role))
+│   │   ├── getTopSkills.sql          # TypedSQL query: top N skills by count with category
+│   │   └── getSkillsByCategory.sql   # TypedSQL query: skill count grouped by category
 │   ├── schema.prisma              # Database schema (Job, Country, etc.)
 │   └── seed.ts                    # Seed script to seed the database with some countries
 └── src/
@@ -223,11 +226,12 @@ backend/
 5. **Service layer** – `src/modules/market/market.service.ts`
    - Core **aggregation logic**
    - Uses `JobsRepository.findJobs` for total count, salary, remote distribution
-   - Uses `Promise.all` to run `findTopRoles` and `findTopSkills` in parallel (both TypedSQL in DB)
-   - Returns `MarketOverview` with all fields including `topSkills`
+   - Uses `Promise.all` to run `findTopRoles`, `findTopSkills`, and `findSkillsByCategory` in parallel (all TypedSQL in DB)
+   - Computes `percentage` per skill category from the total count
+   - Returns `MarketOverview` with all fields including `topSkills` and `skillsByCategory`
 
 6. **Repository layer** – `src/modules/*/*.repository.ts`
-   - `JobsRepository`: `findJobs` (Prisma `findMany`), `findTopRoles` and `findTopSkills` (both `$queryRawTyped`)
+   - `JobsRepository`: `findJobs` (Prisma `findMany`), `findTopRoles`, `findTopSkills`, and `findSkillsByCategory` (all `$queryRawTyped`)
    - `CountriesRepository`: `getAllCountries`, `findByCode`
    - All persistence behind these interfaces
 
