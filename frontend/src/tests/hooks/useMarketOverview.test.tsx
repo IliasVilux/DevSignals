@@ -49,6 +49,26 @@ describe("useMarketOverview", () => {
                 { name: "React", category: "FRAMEWORK", count: 15 },
                 { name: "PostgreSQL", category: "DATABASE", count: 8 },
             ],
+            skillCategoryBreakdown: [
+                {
+                    category: "LANGUAGE",
+                    count: 20,
+                    percentage: 49,
+                    skills: [{ name: "TypeScript", category: "LANGUAGE", count: 20 }],
+                },
+                {
+                    category: "FRAMEWORK",
+                    count: 15,
+                    percentage: 37,
+                    skills: [{ name: "React", category: "FRAMEWORK", count: 15 }],
+                },
+                {
+                    category: "DATABASE",
+                    count: 8,
+                    percentage: 20,
+                    skills: [{ name: "PostgreSQL", category: "DATABASE", count: 8 }],
+                },
+            ],
         })
     })
 

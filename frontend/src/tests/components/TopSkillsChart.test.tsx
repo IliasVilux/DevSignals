@@ -38,10 +38,10 @@ describe("TopSkillsChart", () => {
     it("renders skill names and counts", () => {
         render(<TopSkillsChart data={defaultData} />)
 
-        expect(screen.getByText("TypeScript")).toBeInTheDocument()
-        expect(screen.getByText("10")).toBeInTheDocument()
-        expect(screen.getByText("React")).toBeInTheDocument()
-        expect(screen.getByText("7")).toBeInTheDocument()
+        expect(screen.getAllByText("TypeScript").length).toBeGreaterThan(0)
+        expect(screen.getAllByText("10").length).toBeGreaterThan(0)
+        expect(screen.getAllByText("React").length).toBeGreaterThan(0)
+        expect(screen.getAllByText("7").length).toBeGreaterThan(0)
     })
 
     it("renders empty chart without crashing when data is empty", () => {

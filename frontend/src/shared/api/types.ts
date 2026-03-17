@@ -18,12 +18,20 @@ export type TopSkill = {
     count: number
 }
 
+export type SkillCategoryBreakdown = {
+    category: SkillCategory
+    count: number
+    percentage: number
+    skills: TopSkill[]
+}
+
 export type MarketOverview = {
     totalJobs: number
     averageSalary: number | null
     remoteDistribution: RemoteDistribution
     topRoles: TopRoles[]
     topSkills: TopSkill[]
+    skillCategoryBreakdown: SkillCategoryBreakdown[]
 }
 
 export type GetMarketOverviewParams = {

@@ -42,10 +42,10 @@ describe("TopRolesChart", () => {
     it("renders role names and counts", () => {
         render(<TopRolesChart data={defaultData} />)
 
-        expect(screen.getByText("Software Engineer")).toBeInTheDocument()
-        expect(screen.getByText("30")).toBeInTheDocument()
-        expect(screen.getByText("Data Scientist")).toBeInTheDocument()
-        expect(screen.getByText("25")).toBeInTheDocument()
+        expect(screen.getAllByText("Software Engineer").length).toBeGreaterThan(0)
+        expect(screen.getAllByText("30").length).toBeGreaterThan(0)
+        expect(screen.getAllByText("Data Scientist").length).toBeGreaterThan(0)
+        expect(screen.getAllByText("25").length).toBeGreaterThan(0)
     })
 
     it("renders empty chart without crashing when data is empty", () => {

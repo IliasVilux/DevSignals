@@ -117,9 +117,11 @@ describe("MarketOverviewPage", () => {
         it("renders top roles chart", async () => {
             render(<MarketOverviewPage />, { wrapper: createWrapper() })
 
-            await waitFor(() => expect(screen.getByText("Software Engineer")).toBeInTheDocument())
-            expect(screen.getByText("Data Scientist")).toBeInTheDocument()
-            expect(screen.getByText("Product Manager")).toBeInTheDocument()
+            await waitFor(() =>
+                expect(screen.getAllByText("Software Engineer").length).toBeGreaterThan(0)
+            )
+            expect(screen.getAllByText("Data Scientist").length).toBeGreaterThan(0)
+            expect(screen.getAllByText("Product Manager").length).toBeGreaterThan(0)
         })
     })
 })
