@@ -1,13 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <!-- Dark background -->
-  <rect width="32" height="32" rx="7" fill="#0d0d12"/>
-  <!-- Pulse line: flat → spike → upward trend -->
-  <polyline
-    points="2,19 7,19 9,9 12,27 15,11 18,19 22,19 30,11"
-    fill="none"
-    stroke="#818cf8"
-    stroke-width="2.5"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" fill="#0d0d12" rx="7"/><path fill="none" stroke="#818cf8" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2 19h5L9 9l3 18 3-16 3 8h4l8-8"/></svg>
