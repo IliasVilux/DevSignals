@@ -126,7 +126,7 @@ Omission of both filters returns an overview over all jobs in the database.
 - CORS middleware for cross-origin requests from frontend
 - Vitest for testing
 - `tsx` for TypeScript execution in dev
-- `dotenv` for configuration
+- Node.js native `--env-file` for configuration (no dependencies)
 
 ## Scripts
 
