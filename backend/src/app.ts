@@ -23,6 +23,7 @@ const apiLimiter = rateLimit({
 });
 
 app.use("/api", apiLimiter);
+app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
 app.use("/api/market", marketRoutes);
 app.use("/api/countries", countriesRoutes);
