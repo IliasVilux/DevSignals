@@ -15,7 +15,7 @@ export function MarketOverviewPage() {
     const [role, setRole] = useState<string>("")
     const debouncedRole = useDebounce(role, 500)
 
-    const { data, isLoading, error, isError } = useMarketOverview({
+    const { data, isLoading, error, isError, refetch } = useMarketOverview({
         countryCode,
         role: debouncedRole || undefined,
     })
@@ -90,9 +90,20 @@ export function MarketOverviewPage() {
                     </div>
                 )}
                 {isError && (
-                    <p className="text-xs text-destructive tracking-widest uppercase px-6 md:px-0 py-8">
-                        error: {error.message}
-                    </p>
+                    <div className="px-6 md:px-0 py-16 flex flex-col items-center gap-4 text-center">
+                        <p className="text-xs text-destructive tracking-widest uppercase">
+                            failed to load market data
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                            {error?.message ?? "Something went wrong. Please try again."}
+                        </p>
+                        <button
+                            onClick={() => refetch()}
+                            className="text-xs tracking-widest uppercase border border-border px-5 py-2 hover:bg-accent transition-colors cursor-pointer"
+                        >
+                            retry
+                        </button>
+                    </div>
                 )}
                 {data && data.totalJobs === 0 && (
                     <div className="px-6 md:px-0 py-16 text-center">
