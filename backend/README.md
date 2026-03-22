@@ -61,8 +61,14 @@ Separation is strict: controllers and services use **typed DTOs** (e.g. `MarketO
 - **Data freshness tracking**  
   `Country` has a `lastIngestedAt: DateTime?` field updated by the ingestion pipeline after each successful run. Exposed via `GET /api/countries` so the frontend can show users how recent the data is. The `formatLastIngested()` helper on the frontend converts the ISO date to a human-readable relative string (e.g. "3 hours ago").
 
-- **Scheduled ingestion**  
-  `node-cron` registers two background tasks in `src/ingestion/scheduler.ts`: a daily ingest (3am) and a weekly cleanup that deletes jobs older than 30 days. `startScheduler()` is called from `server.ts` at startup. BullMQ (Redis-based) was considered but deferred — `node-cron` is sufficient for current scale and avoids extra infrastructure dependency.
+- **Redis caching**
+  `GET /api/market/overview` results are cached in Redis (via `ioredis`) using a cache-aside pattern. Cache key: `market:overview:{countryCode|all}:{role|all}`. TTL: 2 hours. Writes are fire-and-forget (no `await`) to avoid adding Redis latency to the critical path. Reads fall back to the database on any Redis error. The cache is invalidated after each successful ingestion run (both scheduled and CLI) using `SCAN` + `DEL` — never `KEYS *`, which blocks Redis. If `REDIS_URL` is absent, caching is silently skipped and the system works normally. This is the recommended pattern for optional infrastructure: graceful degradation, not a crash.
+
+- **Global error handler**
+  A 4-argument Express middleware in `src/app.ts` catches any error not handled by controller `try/catch` blocks. Returns `{ error: "An unexpected error occurred." }` with status 500. The 4-argument signature is required — Express identifies error handlers by arity. Placed after all route mounting so it acts as a safety net without interfering with normal request flow. Includes a `res.headersSent` guard to avoid writing headers twice if a response was already started.
+
+- **Scheduled ingestion**
+  `node-cron` registers two background tasks in `src/ingestion/scheduler.ts`: a daily ingest (3am) and a weekly cleanup that deletes jobs older than 30 days. Cache invalidation runs after each successful ingest. `startScheduler()` is called from `server.ts` at startup. BullMQ (Redis-based) was considered but deferred — `node-cron` is sufficient for current scale and avoids extra infrastructure dependency.
 
 ---
 
@@ -123,10 +129,11 @@ Omission of both filters returns an overview over all jobs in the database.
 - Node.js, Express 5, TypeScript
 - Prisma ORM with PostgreSQL (Prisma Pg adapter)
 - Prisma TypedSQL (`previewFeatures = ["typedSql"]`) for type-safe raw SQL
+- ioredis for Redis caching (optional — graceful degradation without `REDIS_URL`)
 - CORS middleware for cross-origin requests from frontend
 - Vitest for testing
 - `tsx` for TypeScript execution in dev
-- Node.js native `--env-file` for configuration (no dependencies)
+- Node.js native `--env-file` for configuration (no dotenv dependency)
 
 ## Scripts
 
@@ -167,7 +174,8 @@ backend/
     │   ├── ingest-jobs.ts             # Orchestration: fetch → normalize → persist
     │   └── job-normalizer.ts          # Map raw Adzuna job → NormalizedJob (incl. skill extraction)
     ├── lib/
-    │   └── prisma.ts              # Prisma client instance
+    │   ├── prisma.ts              # Prisma client instance
+    │   └── redis.ts               # ioredis singleton — returns null if REDIS_URL absent
     ├── modules/
     │   ├── countries/
     │   │   ├── countries.controller.ts
@@ -224,11 +232,11 @@ backend/
    - Translates service result into HTTP response (status + JSON)
 
 5. **Service layer** – `src/modules/market/market.service.ts`
-   - Core **aggregation logic**
-   - Uses `JobsRepository.findJobs` for total count, salary, remote distribution
-   - Uses `Promise.all` to run `findTopRoles`, `findTopSkills`, and `findSkillCategoryBreakdown` in parallel (all TypedSQL in DB)
-   - Computes `percentage` per skill category from the total count
-   - Returns `MarketOverview` with all fields including `topSkills` and `skillCategoryBreakdown`
+   - Checks Redis cache first (`market:overview:{cc}:{role}` key) — returns cached result immediately on hit
+   - On cache miss: fetches jobs, delegates calculations to private methods (`calculateAverageSalary`, `calculateRemoteDistribution`, `calculateSkillCategoryBreakdown`)
+   - Uses `Promise.all` to run `findTopRoles`, `findTopSkills`, and `findSkillCategoryBreakdown` in parallel
+   - Writes result to Redis fire-and-forget after building it
+   - Returns `MarketOverview`
 
 6. **Repository layer** – `src/modules/*/*.repository.ts`
    - `JobsRepository`: `findJobs` (Prisma `findMany`), `findTopRoles`, `findTopSkills`, and `findSkillCategoryBreakdown` (all `$queryRawTyped`)
@@ -296,9 +304,7 @@ backend/
 
 - **No DI container** – Services receive dependencies via constructor args; wiring is explicit in controllers or scripts. Keeps the stack understandable and avoids framework overhead.
 - **No request-level validation library** – Query params are validated with simple checks in the controller. A library (e.g. Zod) can be introduced when the number of endpoints and shapes grows.
-- **Generic 500 on errors** – Controllers catch and return a single error message. Structured error codes and client-facing messages can be added when needed.
-- **No caching** – Every overview request hits the database. Caching (in-memory or Redis) is a natural next step when response time or DB load becomes a concern.
-- **Ingestion is CLI-only** – No cron or job queue yet. `pnpm ingest` is run manually or via external scheduler. Fits MVP; background workers can be added in a later phase.
+- **No authentication** – The API is read-only analytics. Auth is deferred until it adds real product value (planned for v0.6).
 
 These choices keep the backend easy to reason about and to extend when requirements grow.
 
@@ -313,11 +319,13 @@ pnpm install
 ```
 
 2. Configure environment:
-   - Create a `.env` file with (all required at startup; see `src/config/env.ts`):
+   - Create a `.env` file. Required vars (app fails to start if missing):
      - `DATABASE_URL`
      - `ADZUNA_APP_ID`
      - `ADZUNA_API_KEY`
      - `PORT`
+   - Optional vars (graceful degradation if absent):
+     - `REDIS_URL` – enables response caching. Recommended provider: [Upstash](https://upstash.com) (free tier, works with Render)
    - CORS allowed origins are set in `src/app.ts`; update the list when deploying (e.g. add your Vercel URL).
 
 3. Apply schema and seed data:

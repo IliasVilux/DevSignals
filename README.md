@@ -16,9 +16,9 @@ It does **not** show job listings; it aggregates external job data and turns it 
 - `frontend/` – React + TypeScript + Vite + TanStack Query + Recharts
 - `docs/` – project context and architecture notes
 
-## Current Phase – MVP v0.5 completed ✅
+## Current Phase – MVP v0.5.5 completed ✅
 
-The backend provides a clean, testable analytics API with rate limiting, data freshness tracking, scheduled ingestion, and role title normalization. The frontend consumes it to display meaningful market insights with per-role salary data, skill category breakdowns, loading skeletons, and empty states.
+The backend provides a clean, testable analytics API with Redis caching, rate limiting, data freshness tracking, scheduled ingestion, and role title normalization. The frontend consumes it to display meaningful market insights with per-role salary data, skill category breakdowns, mobile-optimized charts, and a complete error handling layer.
 
 ### Backend
 
@@ -26,21 +26,25 @@ The backend provides a clean, testable analytics API with rate limiting, data fr
 - Normalization of external job data into an internal `Job` model (including improved remote type detection)
 - **Skills extraction pipeline**: regex-based extractor identifies ~70 technologies from job text and persists them to a `Skill`/`JobSkill` graph linked to every ingested job
 - Aggregation logic exposed through a market overview endpoint, including top skills per country/role and **average salary per role**
-- **Scheduled ingestion**: `node-cron` runs a daily ingest (3am) and a weekly cleanup that deletes jobs older than 30 days. `startScheduler()` is called from `server.ts` at startup
-- **Role title normalization**: `normalizeRole()` strips parenthetical content and trailing dash qualifiers from Adzuna titles before persisting (e.g. `"Backend Engineer (AdTech) - Ops"` → `"Backend Engineer"`)
+- **Redis caching**: `GET /api/market/overview` results cached per filter combination (TTL 2h, cache-aside pattern). Graceful degradation if `REDIS_URL` is absent. Cache invalidated after each successful ingestion run
+- **Scheduled ingestion**: `node-cron` runs a daily ingest (3am) and a weekly cleanup that deletes jobs older than 30 days
+- **Global error handler**: Express middleware catches unhandled errors and returns a consistent `{ error: string }` shape
+- **Role title normalization**: `normalizeRole()` strips parenthetical content and trailing dash qualifiers from Adzuna titles (e.g. `"Backend Engineer (AdTech) - Ops"` → `"Backend Engineer"`)
 
 ### Frontend
 
 - Feature-based React + TypeScript architecture
 - Dark, data-first UI built with Tailwind CSS v4 and shadcn/ui (zinc theme)
-- TanStack Query for server state management
+- **`ApiError` class**: parses error body from the API, exposes HTTP status, and provides human-readable messages
+- **TanStack Query** with explicit config: `staleTime 5min`, smart retry (skips 4xx, max 2 retries on 5xx)
+- **Error boundary**: catches unexpected render errors app-wide with a "try again" fallback
 - Country select populated dynamically from the API
-- **Data freshness label**: shows how long ago data was ingested for the selected country (e.g. "data from 3 hours ago")
+- **Data freshness label**: shows how long ago data was ingested for the selected country
 - Role text input with debounce to avoid unnecessary requests
 - Stats display: total jobs, average salary, remote/hybrid/onsite percentages, top roles, top skills, and skill category breakdowns
-- Recharts horizontal bar charts for remote distribution, top skills, and per-category skill breakdown
+- Recharts charts for desktop + custom bar components for mobile (no Recharts on mobile)
 - **Dual-bar TopRolesChart**: count + average salary per role on independent axes
-- **SkillCategoryBreakdown**: per-category sections with desktop chart + mobile list, showing top 5 skills and how often each category appears in job postings
+- **SkillCategoryBreakdown**: per-category sections with desktop chart + mobile list
 
 ### Current API
 
