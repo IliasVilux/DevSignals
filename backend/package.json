@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "start": "node --env-file=.env dist/src/server.js",
+    "start": "node dist/src/server.js",
     "prisma:push": "pnpm prisma db push",
     "prisma:seed": "tsx --env-file=.env prisma/seed.ts",
     "ingest": "tsx --env-file=.env src/ingestion/ingest-jobs.ts",

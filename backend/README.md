@@ -216,6 +216,7 @@ backend/
    - Enables CORS for frontend origins (`http://localhost:5173`, Vercel URL)
    - Uses `express.json()`
    - Applies rate limiter (100 req/IP/15min) to all `/api/*` routes
+   - Exposes `GET /health` outside the rate limiter — used by UptimeRobot to prevent Render's 15-minute inactivity spin-down
    - Mounts `marketRoutes` under `/api/market`, `countriesRoutes` under `/api/countries`
 
 2. **HTTP server bootstrap** – `src/server.ts`

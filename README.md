@@ -65,7 +65,9 @@ The backend provides a clean, testable analytics API with Redis caching, rate li
 ## Deployment
 
 - **Backend:** https://devsignals.onrender.com
-- **Frontend:** https://dev-signals.vercel.app
+- **Frontend:** https://dev-signals.vercel.app — Vercel
+- **Redis:** Upstash free tier — caches market overview responses (TTL 2h)
+- **Keep-alive:** UptimeRobot pings `GET /health` every 14 minutes to prevent Render's 15-minute inactivity spin-down and ensure the ingestion cron runs
 
 ## High-Level Architecture
 
