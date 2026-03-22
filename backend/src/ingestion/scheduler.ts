@@ -1,8 +1,29 @@
 import { schedule } from "node-cron";
 import { ingestAll } from "./ingest";
 import { prisma } from "../lib/prisma";
+import { getRedis } from "../lib/redis";
 
 const RETENTION_DAYS = 30;
+
+async function invalidateMarketCache(): Promise<void> {
+  const redis = getRedis();
+  if (!redis) return;
+
+  const pattern = "market:overview:*";
+  let cursor = "0";
+  let deleted = 0;
+
+  do {
+    const [nextCursor, keys] = await redis.scan(cursor, "MATCH", pattern, "COUNT", 100);
+    cursor = nextCursor;
+    if (keys.length > 0) {
+      await redis.del(...keys);
+      deleted += keys.length;
+    }
+  } while (cursor !== "0");
+
+  console.log(`[cache] invalidated ${deleted} market:overview keys`);
+}
 
 export async function cleanupOldJobs(): Promise<void> {
   const cutoff = new Date();
@@ -23,6 +44,7 @@ export function startScheduler(): void {
     console.log("Scheduler: starting daily ingest...");
     try {
       await ingestAll();
+      await invalidateMarketCache();
     } catch (err) {
       console.error("Scheduler: daily ingest failed:", err);
     }

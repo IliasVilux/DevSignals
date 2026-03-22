@@ -11,4 +11,5 @@ export const env = {
   ADZUNA_API_KEY: getEnv("ADZUNA_API_KEY"),
   ADZUNA_APP_ID: getEnv("ADZUNA_APP_ID"),
   PORT: getEnv("PORT"),
+  REDIS_URL: process.env.REDIS_URL,
 };
