@@ -1,4 +1,8 @@
-import express from "express";
+import express, {
+  type NextFunction,
+  type Request,
+  type Response,
+} from "express";
 import { rateLimit } from "express-rate-limit";
 import marketRoutes from "./routes/market.routes";
 import countriesRoutes from "./routes/countries.routes";
@@ -22,5 +26,13 @@ app.use("/api", apiLimiter);
 
 app.use("/api/market", marketRoutes);
 app.use("/api/countries", countriesRoutes);
+
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  console.error("[error]", err);
+  if (res.headersSent) return;
+  res
+    .status(500)
+    .json({ error: "An unexpected error occurred. Please try again later." });
+});
 
 export default app;
