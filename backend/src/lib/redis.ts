@@ -9,7 +9,6 @@ export function getRedis(): Redis | null {
   if (!url) return null;
 
   client = new Redis(url, {
-    enableOfflineQueue: false,
     maxRetriesPerRequest: 1,
   });
 
