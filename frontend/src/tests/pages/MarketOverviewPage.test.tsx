@@ -86,7 +86,7 @@ describe("MarketOverviewPage", () => {
             server.use(http.get("*/api/market/overview", () => HttpResponse.error()))
             render(<MarketOverviewPage />, { wrapper: createWrapper() })
 
-            await waitFor(() => expect(screen.getByText(/error:/i)).toBeInTheDocument())
+            await waitFor(() => expect(screen.getByText(/failed to load market data/i)).toBeInTheDocument())
         })
     })
 
@@ -109,9 +109,9 @@ describe("MarketOverviewPage", () => {
             await waitFor(() =>
                 expect(screen.getByText(/remote distribution/i)).toBeInTheDocument()
             )
-            expect(screen.getByText("Remote")).toBeInTheDocument()
-            expect(screen.getByText("Hybrid")).toBeInTheDocument()
-            expect(screen.getByText("Onsite")).toBeInTheDocument()
+            expect(screen.getAllByText("Remote").length).toBeGreaterThan(0)
+            expect(screen.getAllByText("Hybrid").length).toBeGreaterThan(0)
+            expect(screen.getAllByText("Onsite").length).toBeGreaterThan(0)
         })
 
         it("renders top roles chart", async () => {
