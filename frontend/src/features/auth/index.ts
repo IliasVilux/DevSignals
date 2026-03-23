@@ -1,5 +1,6 @@
-export { AuthProvider, useAuthContext } from "./AuthContext"
+export { AuthProvider } from "./AuthContext"
 export { useAuth } from "./hooks/useAuth"
+export { useAuthContext } from "./hooks/useAuthContext"
 export { AuthStatus } from "./components/AuthStatus"
 export { AuthCallbackPage } from "./pages/AuthCallbackPage"
 export type { AuthUser } from "@/shared/api/types"

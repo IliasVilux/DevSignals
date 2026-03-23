@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query"
-import { useAuthContext } from "../AuthContext"
+import { useAuthContext } from "../hooks/useAuthContext"
 import { GitHub, Google } from "@/shared/ui/Icons"
 import { Avatar, AvatarImage, AvatarFallback } from "@/shared/ui/avatar"
 import { Separator } from "@/shared/ui/separator"
