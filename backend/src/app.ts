@@ -6,17 +6,25 @@ import express, {
 import { rateLimit } from "express-rate-limit";
 import marketRoutes from "./routes/market.routes";
 import countriesRoutes from "./routes/countries.routes";
+import authRoutes from "./routes/auth.routes";
 import cors from "cors";
+import cookieParser from "cookie-parser";
+import passport from "passport";
 
 const app = express();
 
 app.use(
-  cors({ origin: ["http://localhost:5173", "https://dev-signals.vercel.app"] })
+  cors({
+    origin: ["http://localhost:5173", "https://dev-signals.vercel.app"],
+    credentials: true,
+  })
 );
 app.use(express.json());
+app.use(cookieParser());
+app.use(passport.initialize());
 
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   limit: 1000,
   standardHeaders: "draft-8",
   message: { error: "Too many requests, please try again later." },
@@ -25,6 +33,7 @@ const apiLimiter = rateLimit({
 app.use("/api", apiLimiter);
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
+app.use("/auth", authRoutes);
 app.use("/api/market", marketRoutes);
 app.use("/api/countries", countriesRoutes);
 
