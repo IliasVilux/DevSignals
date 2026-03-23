@@ -6,6 +6,10 @@ import {
 
 const mockDeleteMany = vi.fn();
 
+vi.mock("../../../src/ingestion/ingest", () => ({
+  ingestAll: vi.fn(),
+}));
+
 vi.mock("../../../src/lib/prisma", () => ({
   prisma: {
     job: {
