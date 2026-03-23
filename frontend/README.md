@@ -76,10 +76,12 @@ src/
 │   │   ├── components/
 │   │   │   └── AuthStatus.tsx         # Header chip: sign-in buttons or avatar + name + sign-out
 │   │   ├── hooks/
-│   │   │   └── useAuth.ts             # TanStack Query hook for GET /auth/me
+│   │   │   ├── useAuth.ts             # TanStack Query hook for GET /auth/me
+│   │   │   └── useAuthContext.ts      # Reads AuthContext — throws if used outside AuthProvider
 │   │   ├── pages/
 │   │   │   └── AuthCallbackPage.tsx   # Handles /auth/callback redirect after OAuth
-│   │   ├── AuthContext.tsx            # AuthProvider + useAuthContext (React Context wrapper)
+│   │   ├── context.ts                 # AuthContext creation + AuthContextValue type (plain .ts, no components)
+│   │   ├── AuthContext.tsx            # AuthProvider component only
 │   │   └── index.ts                   # Feature public exports
 │   └── market/
 │       ├── components/
