@@ -16,9 +16,9 @@ It does **not** show job listings; it aggregates external job data and turns it 
 - `frontend/` – React + TypeScript + Vite + TanStack Query + Recharts
 - `docs/` – project context and architecture notes
 
-## Current Phase – MVP v0.6 (Auth backend complete ✅, Frontend in progress 🔄)
+## Current Phase – MVP v0.6 complete ✅
 
-MVP v0.5.5 delivered a full analytics API with Redis caching, rate limiting, scheduled ingestion, and a polished responsive frontend. MVP v0.6 adds authentication: social OAuth (Google + GitHub) with stateless JWT stored in an httpOnly cookie. No user database yet — identity lives in the JWT. The frontend auth layer (login page, auth context, protected routes) is the active work.
+MVP v0.5.5 delivered a full analytics API with Redis caching, rate limiting, scheduled ingestion, and a polished responsive frontend. MVP v0.6 adds social OAuth authentication (Google + GitHub) with stateless JWT stored in an httpOnly cookie. No user database — identity lives entirely in the JWT. The header shows a sign-in chip when unauthenticated and an avatar + name + sign-out chip when authenticated.
 
 ### Backend
 
@@ -33,7 +33,7 @@ MVP v0.5.5 delivered a full analytics API with Redis caching, rate limiting, sch
 
 ### Frontend
 
-- Feature-based React + TypeScript architecture
+- Feature-based React + TypeScript architecture (`features/market`, `features/auth`)
 - Dark, data-first UI built with Tailwind CSS v4 and shadcn/ui (zinc theme)
 - **`ApiError` class**: parses error body from the API, exposes HTTP status, and provides human-readable messages
 - **TanStack Query** with explicit config: `staleTime 5min`, smart retry (skips 4xx, max 2 retries on 5xx)
@@ -45,6 +45,7 @@ MVP v0.5.5 delivered a full analytics API with Redis caching, rate limiting, sch
 - Recharts charts for desktop + custom bar components for mobile (no Recharts on mobile)
 - **Dual-bar TopRolesChart**: count + average salary per role on independent axes
 - **SkillCategoryBreakdown**: per-category sections with desktop chart + mobile list
+- **Auth (v0.6)**: `AuthContext` + `useAuth` hook restore session on load via `GET /auth/me`. `AuthStatus` chip in the header — sign-in buttons when unauthenticated, avatar + provider badge + name + sign-out when authenticated
 
 ### Auth API (v0.6)
 

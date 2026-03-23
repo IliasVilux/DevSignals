@@ -68,10 +68,19 @@ The frontend follows a **feature-based architecture** that separates application
 src/
 ├── app/
 │   ├── index.tsx              # Root composition: wraps providers + router
-│   ├── providers.tsx          # Global providers (QueryClientProvider, TooltipProvider)
-│   └── router.tsx             # React Router route definitions
+│   ├── providers.tsx          # Global providers (QueryClientProvider, AuthProvider, TooltipProvider)
+│   └── router.tsx             # React Router route definitions (/, /auth/callback)
 │
 ├── features/
+│   ├── auth/
+│   │   ├── components/
+│   │   │   └── AuthStatus.tsx         # Header chip: sign-in buttons or avatar + name + sign-out
+│   │   ├── hooks/
+│   │   │   └── useAuth.ts             # TanStack Query hook for GET /auth/me
+│   │   ├── pages/
+│   │   │   └── AuthCallbackPage.tsx   # Handles /auth/callback redirect after OAuth
+│   │   ├── AuthContext.tsx            # AuthProvider + useAuthContext (React Context wrapper)
+│   │   └── index.ts                   # Feature public exports
 │   └── market/
 │       ├── components/
 │       │   ├── index.ts                       # Component exports
@@ -90,31 +99,36 @@ src/
 │
 ├── shared/
 │   ├── api/
-│   │   ├── client.ts           # Fetch abstraction (base URL, error handling)
+│   │   ├── client.ts           # Fetch abstraction (base URL, credentials: include, error handling)
 │   │   ├── index.ts            # Domain endpoint functions
-│   │   └── types.ts            # Shared frontend domain types
+│   │   └── types.ts            # Shared frontend domain types (MarketOverview, Country, AuthUser)
 │   ├── hooks/
 │   │   ├── index.ts            # Shared hook exports
 │   │   └── useDebounce.ts      # Debounce utility for input performance
 │   └── ui/
-│       ├── Icons.tsx           # SVG icon components (typed with SVGProps)
+│       ├── avatar.tsx          # shadcn/ui Avatar with size variants (sm/default/lg)
+│       ├── Icons.tsx           # SVG icon components: ArrowDownSLine, Google, GitHub
+│       ├── separator.tsx       # shadcn/ui Separator (horizontal/vertical)
 │       └── tooltip.tsx         # shadcn/ui Tooltip primitive (Radix-based)
 │
 └── tests/
     ├── components/
+    │   ├── AuthStatus.test.tsx               # Sign-in state, authenticated state, logout
     │   ├── MarketFilters.test.tsx            # Interactions: country select, role input
     │   ├── RemoteDistributionChart.test.tsx  # Data transformation to chart entries
     │   └── TopRolesChart.test.tsx            # Data transformation to chart entries
     ├── hooks/
+    │   ├── useAuth.test.tsx                  # Loading, unauthenticated (401), authenticated (200)
     │   ├── useDebounce.test.ts               # Timing and debounce behavior
     │   ├── useCountries.test.tsx             # Fetch, loading, error states
     │   └── useMarketOverview.test.tsx        # Fetch, loading, error, filter reactivity
     ├── mocks/
-    │   ├── handlers.ts                       # MSW mock API handlers
+    │   ├── handlers.ts                       # MSW mock API handlers (incl. /auth/me → 401)
     │   └── server.ts                         # MSW node server setup
     ├── pages/
+    │   ├── AuthCallbackPage.test.tsx         # Redirect to / or /login based on ?success param
     │   └── MarketOverviewPage.test.tsx       # Integration: full filter → fetch → render flow
-    └── setup.ts                              # MSW server lifecycle + jest-dom setup                          # MSW server lifecycle + jest-dom setup
+    └── setup.ts                              # MSW server lifecycle + jest-dom setup
 ```
 
 ---
@@ -161,8 +175,12 @@ Consumed from `shared/api/`:
 | -------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `GET /api/market/overview` | `useMarketOverview` | Returns `totalJobs`, `averageSalary`, `remoteDistribution`, `topRoles` (with `avgSalary`), `topSkills`, `skillCategoryBreakdown` (top 5 skills per category with count and percentage) |
 | `GET /api/countries`       | `useCountries`      | Returns `{ id, code, name, lastIngestedAt }[]` for filter select and freshness label                                                                                                   |
+| `GET /auth/me`             | `useAuth`           | Returns `{ sub, provider, email, name, picture }` if authenticated, 401 otherwise. Called on app load to restore session from the `ds_auth` httpOnly cookie                           |
+| `POST /auth/logout`        | (direct fetch)      | Clears the `ds_auth` cookie. Called from `AuthStatus` on sign-out click, then query cache is cleared                                                                                  |
 
 Query params forwarded by `useMarketOverview`: `countryCode`, `role` (debounced).
+
+All requests include `credentials: 'include'` so the browser sends the `ds_auth` cross-origin cookie.
 
 ---
 
@@ -199,7 +217,7 @@ pnpm install
 
 2. Configure environment:
     - Create a `.env` file with:
-        - `VITE_API_BASE_URL` — base URL of the backend (e.g. `http://localhost:3000`)
+        - `VITE_API_URL` — base URL of the backend (e.g. `http://localhost:3000`)
 
 3. Start the dev server:
 
@@ -241,5 +259,5 @@ Make sure the backend is running and accessible at the configured base URL.
 
 ## Intentional Simplifications (Current Phase)
 
-- **No error boundaries** — error state handled inline in the page component; a React ErrorBoundary is appropriate at the next scale
-- **Single route** — routing infrastructure is in place; additional pages will be added as new features are built
+- **No protected routes** — the market overview is public by design; `ProtectedRoute` infrastructure is ready for when Personal Match Scoring (v0.7) requires gating behind auth
+- **Auth state not one-time-use CSRF** — the backend HMAC state is not invalidated on use; the fix (Redis-based revocation) is deferred until the User model is added in the next phase

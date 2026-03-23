@@ -347,8 +347,6 @@ backend/
 
 - **No DI container** – Services receive dependencies via constructor args; wiring is explicit in controllers or scripts. Keeps the stack understandable and avoids framework overhead.
 - **No request-level validation library** – Query params are validated with simple checks in the controller. A library (e.g. Zod) can be introduced when the number of endpoints and shapes grows.
-- **No authentication** – The API is read-only analytics. Auth is deferred until it adds real product value (planned for v0.6).
-
 These choices keep the backend easy to reason about and to extend when requirements grow.
 
 ---
