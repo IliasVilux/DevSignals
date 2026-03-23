@@ -17,7 +17,8 @@
     "lint:fix": "pnpm --filter frontend lint:fix",
     "ingest": "pnpm --filter backend ingest",
     "prisma:push": "pnpm --filter backend prisma:push",
-    "prisma:seed": "pnpm --filter backend prisma:seed"
+    "prisma:seed": "pnpm --filter backend prisma:seed",
+    "prepare": "husky"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -27,5 +28,14 @@
       "msw",
       "prisma"
     ]
+  },
+  "lint-staged": {
+    "backend/**/*.ts": "prettier --write",
+    "backend/prisma/**/*.prisma": "prettier --write",
+    "frontend/**/*.{ts,tsx,css}": "prettier --write"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0"
   }
 }
