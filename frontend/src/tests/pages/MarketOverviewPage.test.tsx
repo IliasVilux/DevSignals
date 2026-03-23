@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MarketOverviewPage } from "@/features/market"
+import { AuthProvider } from "@/features/auth"
 import { render, screen, waitFor } from "@testing-library/react"
 import { server } from "../mocks/server"
 import { http, HttpResponse } from "msw"
@@ -39,7 +40,9 @@ const createWrapper = () => {
     })
 
     return ({ children }: { children: React.ReactNode }) => (
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        <QueryClientProvider client={queryClient}>
+            <AuthProvider>{children}</AuthProvider>
+        </QueryClientProvider>
     )
 }
 
