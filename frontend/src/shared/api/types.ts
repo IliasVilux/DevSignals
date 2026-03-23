@@ -45,3 +45,11 @@ export type Country = {
     name: string
     lastIngestedAt: string | null
 }
+
+export interface AuthUser {
+    sub: string
+    provider: "google" | "github"
+    email: string
+    name: string
+    picture: string | null
+}

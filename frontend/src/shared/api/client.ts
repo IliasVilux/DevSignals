@@ -16,6 +16,7 @@ export class ApiError extends Error {
 
 export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
     const response = await fetch(`${VITE_API_URL}${path}`, {
+        credentials: "include",
         headers: {
             "Content-Type": "application/json",
         },

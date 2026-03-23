@@ -9,6 +9,7 @@ import {
 } from "../components"
 import { useDebounce } from "@/shared/hooks"
 import { Skeleton } from "@/shared/ui/skeleton"
+import { AuthStatus } from "@/features/auth"
 
 export function MarketOverviewPage() {
     const [countryCode, setCountryCode] = useState<string | undefined>(undefined)
@@ -24,11 +25,14 @@ export function MarketOverviewPage() {
         <div className="min-h-screen">
             {/* Header */}
             <header className="border-b border-border px-6 py-6">
-                <div className="max-w-6xl mx-auto">
-                    <p className="text-xs text-muted-foreground tracking-widest uppercase mb-1">
-                        Tech Job Market
-                    </p>
-                    <h1 className="font-display font-bold text-3xl">DevSignals</h1>
+                <div className="max-w-6xl mx-auto flex items-center justify-between">
+                    <div>
+                        <p className="text-xs text-muted-foreground tracking-widest uppercase mb-1">
+                            Tech Job Market
+                        </p>
+                        <h1 className="font-display font-bold text-3xl">DevSignals</h1>
+                    </div>
+                    <AuthStatus />
                 </div>
             </header>
 
