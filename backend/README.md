@@ -52,8 +52,18 @@ Separation is strict: controllers and services use **typed DTOs** (e.g. `MarketO
 - **Dependency injection at the service layer**  
   `MarketService` receives `IJobsRepository` in its constructor. Controllers (or tests) pass a concrete `JobsRepository` or a mock. No DI container: manual wiring keeps the stack transparent and avoids over-engineering for current scope.
 
-- **No authentication or user system in this phase**  
-  By design for MVP. The API is read-only analytics; auth is deferred until it adds real product value.
+- **Social OAuth authentication (v0.6)**
+  Authentication uses server-side OAuth redirects via Passport.js (Google and GitHub strategies). No email/password. No User model in the database yet — identity lives entirely in the JWT.
+
+  Key decisions:
+  - **httpOnly cookie** (`ds_auth`, TTL 7 days) instead of localStorage: not accessible from JavaScript, mitigates XSS. Cross-domain cookies (Render + Vercel) require `sameSite: 'none', secure: true` in production.
+  - **Relative `callbackURL`** (`/auth/google/callback`) with `proxy: true`: Passport constructs the full URL from the incoming request. No `BACKEND_URL` env var needed — it works correctly behind Render's HTTPS proxy and in local development.
+  - **Stateless CSRF protection**: the OAuth `state` parameter is signed with HMAC (`JWT_SECRET + timestamp + nonce`) instead of stored in `express-session`. Verified on callback; expires after 5 minutes. The random nonce prevents collisions when two users initiate login in the same millisecond.
+  - **Auth routes at `/auth`, not `/api/auth`**: OAuth redirects are browser navigations, not API calls. Keeping them outside `/api/*` means they don't consume the rate limiter quota.
+  - **`lib/jwt.ts` wrapper**: the rest of the app calls `signToken()` / `verifyToken()` — never `jsonwebtoken` directly. If the JWT library changes, only one file changes.
+  - **`Express.User` augmentation** (`src/types/express.d.ts`): Passport declares `req.user?: Express.User`. We extend that interface with `AuthUser` fields so TypeScript knows what `req.user` contains throughout route handlers.
+
+  Known limitation to address in the next phase: state tokens are not one-time use. The correct fix (store in Redis, delete on verify) will be implemented when the User model is added.
 
 - **Rate limiting**  
   All `/api/*` routes are protected by `express-rate-limit` (100 requests per IP per 15-minute window). Returns standard `RateLimit-*` response headers (`draft-8`) so clients can handle backoff gracefully. Applied globally in `src/app.ts` before route mounting.
@@ -110,6 +120,22 @@ Omission of both filters returns an overview over all jobs in the database.
 **`GET /api/countries`**
 
 **Response 200** – `Country[]`: `{ id, code, name, lastIngestedAt: string | null }[]`
+
+---
+
+**`GET /auth/google`** — Initiates Google OAuth flow. Redirects the browser to Google's authorization page.
+
+**`GET /auth/google/callback`** — Google redirects here after authorization. Verifies CSRF state, exchanges code for profile, mints JWT, sets `ds_auth` httpOnly cookie, redirects to `FRONTEND_URL/auth/callback?success=true`.
+
+**`GET /auth/github`** — Same as above for GitHub.
+
+**`GET /auth/github/callback`** — Same as above for GitHub.
+
+**`GET /auth/me`** — Returns the authenticated user's payload if the `ds_auth` cookie is present and valid. Returns 401 otherwise. Used by the frontend on app load to restore auth state.
+
+**Response 200**: `{ sub, provider, email, name, picture }`
+
+**`POST /auth/logout`** — Clears the `ds_auth` cookie. Returns `{ success: true }`.
 
 ---
 
@@ -174,9 +200,16 @@ backend/
     │   ├── ingest-jobs.ts             # Orchestration: fetch → normalize → persist
     │   └── job-normalizer.ts          # Map raw Adzuna job → NormalizedJob (incl. skill extraction)
     ├── lib/
+    │   ├── jwt.ts                 # JWT wrapper: signToken(AuthUser) / verifyToken(token) — never import jsonwebtoken directly
     │   ├── prisma.ts              # Prisma client instance
     │   └── redis.ts               # ioredis singleton — returns null if REDIS_URL absent
+    ├── middleware/
+    │   └── requireAuth.ts         # JWT auth middleware: reads ds_auth cookie → verifies → sets req.user (401 if invalid)
     ├── modules/
+    │   ├── auth/
+    │   │   ├── auth.types.ts      # AuthUser { sub, provider, email, name, picture }, JwtPayload extends AuthUser
+    │   │   ├── auth.service.ts    # normalizeGoogleProfile(), normalizeGithubProfile(), generateSignedState(), verifySignedState()
+    │   │   └── auth.controller.ts # Passport strategy setup + OAuth handlers + getMe + logout
     │   ├── countries/
     │   │   ├── countries.controller.ts
     │   │   ├── countries.repository.ts
@@ -190,20 +223,29 @@ backend/
     │       ├── market.service.ts
     │       └── market.types.ts
     ├── routes/
+    │   ├── auth.routes.ts         # /auth routes → auth controller (outside rate limiter)
     │   ├── market.routes.ts       # /api/market routes → market controller
     │   └── countries.routes.ts    # /api/countries routes → countries controller
     ├── tests/
     │   ├── ingestion/
     │   │   ├── job-normalizer.test.ts
     │   │   └── skill-extractor.test.ts
+    │   ├── lib/
+    │   │   └── jwt.test.ts            # sign/verify roundtrip, tampered/expired token rejection
+    │   ├── middleware/
+    │   │   └── requireAuth.test.ts    # missing cookie → 401, invalid JWT → 401, valid JWT → next() + req.user
     │   └── modules/
+    │       ├── auth/
+    │       │   └── auth.service.test.ts   # profile normalization, state generation/verification
     │       ├── countries/
     │       │   └── countries.repository.test.ts
     │       ├── jobs/
     │       │   └── jobs.repository.test.ts
     │       └── market/
     │           └── market.service.test.ts
-    ├── app.ts                     # Express app: JSON middleware + route mounting
+    ├── types/
+    │   └── express.d.ts           # Augments Express.User with AuthUser — enables typed req.user across routes
+    ├── app.ts                     # Express app: CORS (credentials), cookieParser, passport.initialize, route mounting
     └── server.ts                  # Server bootstrap: reads env + listens on PORT
 ```
 
@@ -327,6 +369,11 @@ pnpm install
      - `PORT`
    - Optional vars (graceful degradation if absent):
      - `REDIS_URL` – enables response caching. Recommended provider: [Upstash](https://upstash.com) (free tier, works with Render)
+   - Auth vars (required for auth to work):
+     - `JWT_SECRET` – random 64-char hex string (`openssl rand -hex 32`)
+     - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` – from Google Cloud Console → OAuth 2.0 Client IDs
+     - `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` – from GitHub → Settings → Developer settings → OAuth Apps
+     - `FRONTEND_URL` – `http://localhost:5173` in dev, `https://dev-signals.vercel.app` in production
    - CORS allowed origins are set in `src/app.ts`; update the list when deploying (e.g. add your Vercel URL).
 
 3. Apply schema and seed data:

@@ -16,9 +16,9 @@ It does **not** show job listings; it aggregates external job data and turns it 
 - `frontend/` – React + TypeScript + Vite + TanStack Query + Recharts
 - `docs/` – project context and architecture notes
 
-## Current Phase – MVP v0.5.5 completed ✅
+## Current Phase – MVP v0.6 (Auth backend complete ✅, Frontend in progress 🔄)
 
-The backend provides a clean, testable analytics API with Redis caching, rate limiting, data freshness tracking, scheduled ingestion, and role title normalization. The frontend consumes it to display meaningful market insights with per-role salary data, skill category breakdowns, mobile-optimized charts, and a complete error handling layer.
+MVP v0.5.5 delivered a full analytics API with Redis caching, rate limiting, scheduled ingestion, and a polished responsive frontend. MVP v0.6 adds authentication: social OAuth (Google + GitHub) with stateless JWT stored in an httpOnly cookie. No user database yet — identity lives in the JWT. The frontend auth layer (login page, auth context, protected routes) is the active work.
 
 ### Backend
 
@@ -46,7 +46,14 @@ The backend provides a clean, testable analytics API with Redis caching, rate li
 - **Dual-bar TopRolesChart**: count + average salary per role on independent axes
 - **SkillCategoryBreakdown**: per-category sections with desktop chart + mobile list
 
-### Current API
+### Auth API (v0.6)
+
+- `GET /auth/google` – initiates Google OAuth (browser redirect)
+- `GET /auth/github` – initiates GitHub OAuth (browser redirect)
+- `GET /auth/me` – returns authenticated user from cookie (`{ sub, provider, email, name, picture }`)
+- `POST /auth/logout` – clears the `ds_auth` cookie
+
+### Market API
 
 - `GET /api/market/overview`
   - Query params:
