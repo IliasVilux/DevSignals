@@ -1,4 +1,8 @@
-import { SkillCategoryBreakdown as SkillCategoryBreakdownBase, TopRoles, TopSkill } from "../jobs/jobs.types";
+import {
+  SkillCategoryBreakdown as SkillCategoryBreakdownBase,
+  TopRoles,
+  TopSkill,
+} from "../jobs/jobs.types";
 
 export interface SkillCategoryBreakdown extends SkillCategoryBreakdownBase {
   percentage: number;

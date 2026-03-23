@@ -156,17 +156,23 @@ describe("MarketService", () => {
         {
           category: SkillCategory.FRAMEWORK,
           count: 50,
-          skills: [{ name: "React", category: SkillCategory.FRAMEWORK, count: 30 }],
+          skills: [
+            { name: "React", category: SkillCategory.FRAMEWORK, count: 30 },
+          ],
         },
         {
           category: SkillCategory.LANGUAGE,
           count: 30,
-          skills: [{ name: "TypeScript", category: SkillCategory.LANGUAGE, count: 30 }],
+          skills: [
+            { name: "TypeScript", category: SkillCategory.LANGUAGE, count: 30 },
+          ],
         },
         {
           category: SkillCategory.DATABASE,
           count: 20,
-          skills: [{ name: "PostgreSQL", category: SkillCategory.DATABASE, count: 20 }],
+          skills: [
+            { name: "PostgreSQL", category: SkillCategory.DATABASE, count: 20 },
+          ],
         },
       ]),
     };
@@ -185,13 +191,17 @@ describe("MarketService", () => {
       category: SkillCategory.LANGUAGE,
       count: 30,
       percentage: 30,
-      skills: [{ name: "TypeScript", category: SkillCategory.LANGUAGE, count: 30 }],
+      skills: [
+        { name: "TypeScript", category: SkillCategory.LANGUAGE, count: 30 },
+      ],
     });
     expect(result.skillCategoryBreakdown[2]).toEqual({
       category: SkillCategory.DATABASE,
       count: 20,
       percentage: 20,
-      skills: [{ name: "PostgreSQL", category: SkillCategory.DATABASE, count: 20 }],
+      skills: [
+        { name: "PostgreSQL", category: SkillCategory.DATABASE, count: 20 },
+      ],
     });
   });
 });

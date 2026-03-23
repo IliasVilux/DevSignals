@@ -86,7 +86,9 @@ describe("MarketOverviewPage", () => {
             server.use(http.get("*/api/market/overview", () => HttpResponse.error()))
             render(<MarketOverviewPage />, { wrapper: createWrapper() })
 
-            await waitFor(() => expect(screen.getByText(/failed to load market data/i)).toBeInTheDocument())
+            await waitFor(() =>
+                expect(screen.getByText(/failed to load market data/i)).toBeInTheDocument()
+            )
         })
     })
 

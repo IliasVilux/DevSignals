@@ -133,13 +133,31 @@ describe("JobsRepository", () => {
 
   it("findSkillCategoryBreakdown groups flat rows into categories with skills", async () => {
     vi.mocked(prisma.$queryRawTyped).mockResolvedValue([
-      { name: "React", category: "FRAMEWORK", skill_count: 30, category_count: 42 },
-      { name: "Vue", category: "FRAMEWORK", skill_count: 12, category_count: 42 },
-      { name: "TypeScript", category: "LANGUAGE", skill_count: 38, category_count: 38 },
+      {
+        name: "React",
+        category: "FRAMEWORK",
+        skill_count: 30,
+        category_count: 42,
+      },
+      {
+        name: "Vue",
+        category: "FRAMEWORK",
+        skill_count: 12,
+        category_count: 42,
+      },
+      {
+        name: "TypeScript",
+        category: "LANGUAGE",
+        skill_count: 38,
+        category_count: 38,
+      },
       { name: null, category: null, skill_count: null, category_count: null },
     ]);
 
-    const filters: MarketOverviewFilters = { countryCode: "US", role: "engineer" };
+    const filters: MarketOverviewFilters = {
+      countryCode: "US",
+      role: "engineer",
+    };
     const result = await repo.findSkillCategoryBreakdown(filters);
 
     expect(prisma.$queryRawTyped).toHaveBeenCalledTimes(1);
@@ -155,7 +173,9 @@ describe("JobsRepository", () => {
     expect(result[1]).toEqual({
       category: SkillCategory.LANGUAGE,
       count: 38,
-      skills: [{ name: "TypeScript", category: SkillCategory.LANGUAGE, count: 38 }],
+      skills: [
+        { name: "TypeScript", category: SkillCategory.LANGUAGE, count: 38 },
+      ],
     });
   });
 

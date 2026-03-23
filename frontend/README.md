@@ -157,10 +157,10 @@ The `MarketOverviewPage` orchestrates the dashboard:
 
 Consumed from `shared/api/`:
 
-| Endpoint                   | Hook                | Description                                                                                            |
-| -------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------ |
+| Endpoint                   | Hook                | Description                                                                                                                                                                            |
+| -------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `GET /api/market/overview` | `useMarketOverview` | Returns `totalJobs`, `averageSalary`, `remoteDistribution`, `topRoles` (with `avgSalary`), `topSkills`, `skillCategoryBreakdown` (top 5 skills per category with count and percentage) |
-| `GET /api/countries`       | `useCountries`      | Returns `{ id, code, name, lastIngestedAt }[]` for filter select and freshness label                   |
+| `GET /api/countries`       | `useCountries`      | Returns `{ id, code, name, lastIngestedAt }[]` for filter select and freshness label                                                                                                   |
 
 Query params forwarded by `useMarketOverview`: `countryCode`, `role` (debounced).
 
