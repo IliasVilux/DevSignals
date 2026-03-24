@@ -1,8 +1,28 @@
 {
   "rewrites": [
     {
-      "source": "/auth/:path*",
-      "destination": "https://devsignals.onrender.com/auth/:path*"
+      "source": "/auth/google/callback",
+      "destination": "https://devsignals.onrender.com/auth/google/callback"
+    },
+    {
+      "source": "/auth/google",
+      "destination": "https://devsignals.onrender.com/auth/google"
+    },
+    {
+      "source": "/auth/github/callback",
+      "destination": "https://devsignals.onrender.com/auth/github/callback"
+    },
+    {
+      "source": "/auth/github",
+      "destination": "https://devsignals.onrender.com/auth/github"
+    },
+    {
+      "source": "/auth/me",
+      "destination": "https://devsignals.onrender.com/auth/me"
+    },
+    {
+      "source": "/auth/logout",
+      "destination": "https://devsignals.onrender.com/auth/logout"
     },
     {
       "source": "/api/:path*",
