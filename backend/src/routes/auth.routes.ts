@@ -1,20 +1,19 @@
 import { Router } from "express";
-import {
-  initiateGoogle,
-  googleCallback,
-  initiateGithub,
-  githubCallback,
-  getMe,
-  logout,
-} from "../modules/auth/auth.controller";
+import { AuthController } from "../modules/auth/auth.controller";
+import { UsersRepository } from "../modules/users/users.repository";
 
 const router = Router();
+const authController = new AuthController(new UsersRepository());
 
-router.get("/google", initiateGoogle);
-router.get("/google/callback", googleCallback);
-router.get("/github", initiateGithub);
-router.get("/github/callback", githubCallback);
-router.get("/me", getMe);
-router.post("/logout", logout);
+router.get("/google", (req, res, next) =>
+  authController.initiateGoogle(req, res, next)
+);
+router.get("/google/callback", authController.handleOAuthCallback("google"));
+router.get("/github", (req, res, next) =>
+  authController.initiateGithub(req, res, next)
+);
+router.get("/github/callback", authController.handleOAuthCallback("github"));
+router.get("/me", (req, res) => authController.getMe(req, res));
+router.post("/logout", (req, res) => authController.logout(req, res));
 
 export default router;
