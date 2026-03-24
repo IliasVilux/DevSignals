@@ -10,6 +10,7 @@ import authRoutes from "./routes/auth.routes";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import passport from "passport";
+import skillsRoutes from "./routes/skills.routes";
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.get("/health", (_req, res) => res.json({ status: "ok" }));
 app.use("/auth", authRoutes);
 app.use("/api/market", marketRoutes);
 app.use("/api/countries", countriesRoutes);
+app.use("/api/skills", skillsRoutes);
 
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   console.error("[error]", err);
