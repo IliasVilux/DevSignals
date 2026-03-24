@@ -52,20 +52,35 @@ Separation is strict: controllers and services use **typed DTOs** (e.g. `MarketO
 - **Dependency injection at the service layer**  
   `MarketService` receives `IJobsRepository` in its constructor. Controllers (or tests) pass a concrete `JobsRepository` or a mock. No DI container: manual wiring keeps the stack transparent and avoids over-engineering for current scope.
 
-- **Social OAuth authentication (v0.6)**
-  Authentication uses server-side OAuth redirects via Passport.js (Google and GitHub strategies). No email/password. No User model in the database yet — identity lives entirely in the JWT.
+- **Social OAuth authentication + User persistence (v0.6 + v0.7)**
+  Authentication uses server-side OAuth redirects via Passport.js (Google and GitHub strategies). No email/password. Users are persisted in the database on every login via upsert.
 
   Key decisions:
+  - **User model with DB-generated ID**: `User` has a cuid primary key (`@id @default(cuid())`), with `@@unique([provider, providerAccountId])`. The OAuth callback upserts the user (creates if new, updates profile data if returning). The JWT `sub` is the DB id, not a provider-derived composite.
+  - **Three distinct auth types**: `AuthUser` (OAuth provider data, has `providerAccountId`), `TokenData` (JWT content, has `sub` = DB id), `JwtPayload extends TokenData` (adds `iat`/`exp`). Each type represents user data at a different stage of the auth flow.
+  - **AuthController class with DI**: receives `IUsersRepository` via constructor. Passport strategies are registered at module load (outside the class). `setCookie`/`clearCookie` are plain functions — no state needed.
   - **httpOnly cookie** (`ds_auth`, TTL 7 days) instead of localStorage: not accessible from JavaScript, mitigates XSS. Cross-domain cookies (Render + Vercel) require `sameSite: 'none', secure: true` in production.
-  - **Relative `callbackURL`** (`/auth/google/callback`) with `proxy: true`: Passport constructs the full URL from the incoming request. No `BACKEND_URL` env var needed — it works correctly behind Render's HTTPS proxy and in local development.
-  - **Stateless CSRF protection**: the OAuth `state` parameter is signed with HMAC (`JWT_SECRET + timestamp + nonce`) instead of stored in `express-session`. Verified on callback; expires after 5 minutes. The random nonce prevents collisions when two users initiate login in the same millisecond.
+  - **Explicit `callbackURL`** via `CALLBACK_BASE_URL` env var: Passport's `proxy: true` inferred the wrong URL through Vercel's proxy. Explicit URL is deterministic across environments.
+  - **Stateless CSRF protection**: the OAuth `state` parameter is signed with HMAC (`JWT_SECRET + timestamp + nonce`) instead of stored in `express-session`. Verified on callback; expires after 5 minutes. Independent from user identification — protects the OAuth flow, not the JWT.
   - **Auth routes at `/auth`, not `/api/auth`**: OAuth redirects are browser navigations, not API calls. Keeping them outside `/api/*` means they don't consume the rate limiter quota.
   - **`lib/jwt.ts` wrapper**: the rest of the app calls `signToken()` / `verifyToken()` — never `jsonwebtoken` directly. If the JWT library changes, only one file changes.
-  - **`Express.User` augmentation** (`src/types/express.d.ts`): Passport declares `req.user?: Express.User`. We extend that interface with `AuthUser` fields so TypeScript knows what `req.user` contains throughout route handlers.
+  - **`Express.User` augmentation** (`src/types/express.d.ts`): extends `Express.User` with `JwtPayload`. Passport strategy callbacks cast `AuthUser` to `Express.User` (`as unknown as Express.User`) — a boundary cast since Passport only transports the object internally.
+  - **No auth service class**: `normalizeGoogleProfile`, `normalizeGithubProfile`, `generateSignedState`, `verifySignedState` are pure functions — no dependencies, no state. A class would add nothing. The controller uses the repository directly for user persistence.
 
-  Known limitation to address in the next phase: state tokens are not one-time use. The correct fix (store in Redis, delete on verify) will be implemented when the User model is added.
+  Known limitation: state tokens are not one-time use. The correct fix (store in Redis, delete on verify) is deferred.
 
   Production deployment note: the OAuth callbackURL must point to the Vercel frontend URL (`CALLBACK_BASE_URL=https://dev-signals.vercel.app`), not the Render backend URL. Vercel proxies `/auth/google/callback` and `/auth/github/callback` to Render. This makes the `ds_auth` cookie first-party (set on `dev-signals.vercel.app`), which is required for Safari ITP and Brave to send it on subsequent requests.
+
+  Auth flow in the codebase:
+  ```
+  1. GET /auth/google → initiateGoogle() → generateSignedState() → redirect to Google
+  2. GET /auth/google/callback → verifySignedState() → Passport exchanges code for profile
+     → normalizeGoogleProfile() → AuthUser { provider, providerAccountId, email, name, picture }
+     → usersRepository.upsert(user) → dbUser { id: "cuid_abc123", ... }
+     → signToken({ sub: dbUser.id, ... }) → JWT
+     → setCookie(res, token) → redirect to frontend
+  3. GET /auth/me → read cookie → verifyToken() → JwtPayload { sub, provider, email, ... }
+  ```
 
 - **Rate limiting**  
   All `/api/*` routes are protected by `express-rate-limit` (100 requests per IP per 15-minute window). Returns standard `RateLimit-*` response headers (`draft-8`) so clients can handle backoff gracefully. Applied globally in `src/app.ts` before route mounting.
@@ -86,6 +101,8 @@ Separation is strict: controllers and services use **typed DTOs** (e.g. `MarketO
 
 ## Data Model & Schema
 
+- **`User`** – `id` (cuid, auto-generated), `provider` ("google" | "github"), `providerAccountId` (raw provider ID), `email`, `name`, `picture` (nullable), `createdAt`, `updatedAt`. Unique constraint: `@@unique([provider, providerAccountId])`. Upserted on every OAuth login.
+- **`UserSkill`** – join table: composite PK `(userId, skillId)`. `onDelete: Cascade` on user relation — deleting a user removes their skill selections. Links `User` ↔ `Skill`.
 - **`Country`** – `id` (cuid), `name`, `code` (unique), `lastIngestedAt` (optional timestamp). Referenced by jobs; seeded once. `lastIngestedAt` is stamped after each successful ingestion run for that country.
 - **`Job`** – core entity:
   - Identity: `externalId` (from provider) + `countryId` → **unique constraint** so the same Adzuna job in the same country is stored once; re-ingestion uses `createMany(..., skipDuplicates: true)`.
@@ -127,7 +144,7 @@ Omission of both filters returns an overview over all jobs in the database.
 
 **`GET /auth/google`** — Initiates Google OAuth flow. Redirects the browser to Google's authorization page.
 
-**`GET /auth/google/callback`** — Google redirects here after authorization. Verifies CSRF state, exchanges code for profile, mints JWT, sets `ds_auth` httpOnly cookie, redirects to `FRONTEND_URL/auth/callback?success=true`.
+**`GET /auth/google/callback`** — Google redirects here after authorization. Verifies CSRF state, exchanges code for profile, upserts user in DB, mints JWT (with `sub` = DB user id), sets `ds_auth` httpOnly cookie, redirects to `FRONTEND_URL/auth/callback?success=true`.
 
 **`GET /auth/github`** — Same as above for GitHub.
 
@@ -135,7 +152,7 @@ Omission of both filters returns an overview over all jobs in the database.
 
 **`GET /auth/me`** — Returns the authenticated user's payload if the `ds_auth` cookie is present and valid. Returns 401 otherwise. Used by the frontend on app load to restore auth state.
 
-**Response 200**: `{ sub, provider, email, name, picture }`
+**Response 200**: `{ sub, provider, email, name, picture }` — `sub` is the User.id (cuid) from the database, not a provider-derived composite.
 
 **`POST /auth/logout`** — Clears the `ds_auth` cookie. Returns `{ success: true }`.
 
@@ -202,16 +219,19 @@ backend/
     │   ├── ingest-jobs.ts             # Orchestration: fetch → normalize → persist
     │   └── job-normalizer.ts          # Map raw Adzuna job → NormalizedJob (incl. skill extraction)
     ├── lib/
-    │   ├── jwt.ts                 # JWT wrapper: signToken(AuthUser) / verifyToken(token) — never import jsonwebtoken directly
+    │   ├── jwt.ts                 # JWT wrapper: signToken(TokenData) / verifyToken(token) → JwtPayload — never import jsonwebtoken directly
     │   ├── prisma.ts              # Prisma client instance
     │   └── redis.ts               # ioredis singleton — returns null if REDIS_URL absent
     ├── middleware/
     │   └── requireAuth.ts         # JWT auth middleware: reads ds_auth cookie → verifies → sets req.user (401 if invalid)
     ├── modules/
     │   ├── auth/
-    │   │   ├── auth.types.ts      # AuthUser { sub, provider, email, name, picture }, JwtPayload extends AuthUser
-    │   │   ├── auth.service.ts    # normalizeGoogleProfile(), normalizeGithubProfile(), generateSignedState(), verifySignedState()
-    │   │   └── auth.controller.ts # Passport strategy setup + OAuth handlers + getMe + logout
+    │   │   ├── auth.types.ts      # AuthUser (OAuth data), TokenData (JWT content), JwtPayload extends TokenData
+    │   │   ├── auth.service.ts    # Pure functions: normalizeGoogleProfile(), normalizeGithubProfile(), generateSignedState(), verifySignedState()
+    │   │   └── auth.controller.ts # AuthController class (IUsersRepository DI) + Passport strategies + OAuth handlers + getMe + logout
+    │   ├── users/
+    │   │   ├── users.types.ts     # UpsertUserData interface
+    │   │   └── users.repository.ts # IUsersRepository interface + UsersRepository: upsert, getUserSkillIds, replaceUserSkills
     │   ├── countries/
     │   │   ├── countries.controller.ts
     │   │   ├── countries.repository.ts
@@ -225,7 +245,7 @@ backend/
     │       ├── market.service.ts
     │       └── market.types.ts
     ├── routes/
-    │   ├── auth.routes.ts         # /auth routes → auth controller (outside rate limiter)
+    │   ├── auth.routes.ts         # /auth routes → AuthController (instantiated with UsersRepository, outside rate limiter)
     │   ├── market.routes.ts       # /api/market routes → market controller
     │   └── countries.routes.ts    # /api/countries routes → countries controller
     ├── tests/
@@ -238,7 +258,9 @@ backend/
     │   │   └── requireAuth.test.ts    # missing cookie → 401, invalid JWT → 401, valid JWT → next() + req.user
     │   └── modules/
     │       ├── auth/
-    │       │   └── auth.service.test.ts   # profile normalization, state generation/verification
+    │       │   └── auth.service.test.ts   # profile normalization (providerAccountId), state generation/verification
+    │       ├── users/
+    │       │   └── users.repository.test.ts # upsert create/update, getUserSkillIds, replaceUserSkills
     │       ├── countries/
     │       │   └── countries.repository.test.ts
     │       ├── jobs/
@@ -246,7 +268,7 @@ backend/
     │       └── market/
     │           └── market.service.test.ts
     ├── types/
-    │   └── express.d.ts           # Augments Express.User with AuthUser — enables typed req.user across routes
+    │   └── express.d.ts           # Augments Express.User with JwtPayload — enables typed req.user across routes
     ├── app.ts                     # Express app: CORS (credentials), cookieParser, passport.initialize, route mounting
     └── server.ts                  # Server bootstrap: reads env + listens on PORT
 ```
