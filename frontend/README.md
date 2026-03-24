@@ -219,7 +219,7 @@ pnpm install
 
 2. Configure environment:
     - Create a `.env` file with:
-        - `VITE_API_URL` — base URL of the backend (e.g. `http://localhost:3000`)
+        - `VITE_API_URL` — base URL of the backend. `http://localhost:3000` in dev. In production (Vercel), set to `https://dev-signals.vercel.app` so all requests go same-origin and are proxied to Render via `vercel.json` rewrites.
 
 3. Start the dev server:
 
@@ -263,3 +263,4 @@ Make sure the backend is running and accessible at the configured base URL.
 
 - **No protected routes** — the market overview is public by design; `ProtectedRoute` infrastructure is ready for when Personal Match Scoring (v0.7) requires gating behind auth
 - **Auth state not one-time-use CSRF** — the backend HMAC state is not invalidated on use; the fix (Redis-based revocation) is deferred until the User model is added in the next phase
+- **Vercel proxy for auth** — `/auth/*` and `/api/*` are proxied to Render via `vercel.json` rewrites. This makes the `ds_auth` cookie first-party (set on `dev-signals.vercel.app`), solving Safari ITP and Brave cross-origin cookie blocking without requiring a custom domain

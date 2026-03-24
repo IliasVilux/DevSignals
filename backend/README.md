@@ -65,6 +65,8 @@ Separation is strict: controllers and services use **typed DTOs** (e.g. `MarketO
 
   Known limitation to address in the next phase: state tokens are not one-time use. The correct fix (store in Redis, delete on verify) will be implemented when the User model is added.
 
+  Production deployment note: the OAuth callbackURL must point to the Vercel frontend URL (`CALLBACK_BASE_URL=https://dev-signals.vercel.app`), not the Render backend URL. Vercel proxies `/auth/google/callback` and `/auth/github/callback` to Render. This makes the `ds_auth` cookie first-party (set on `dev-signals.vercel.app`), which is required for Safari ITP and Brave to send it on subsequent requests.
+
 - **Rate limiting**  
   All `/api/*` routes are protected by `express-rate-limit` (100 requests per IP per 15-minute window). Returns standard `RateLimit-*` response headers (`draft-8`) so clients can handle backoff gracefully. Applied globally in `src/app.ts` before route mounting.
 
@@ -372,6 +374,7 @@ pnpm install
      - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` – from Google Cloud Console → OAuth 2.0 Client IDs
      - `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` – from GitHub → Settings → Developer settings → OAuth Apps
      - `FRONTEND_URL` – `http://localhost:5173` in dev, `https://dev-signals.vercel.app` in production
+     - `CALLBACK_BASE_URL` – base URL for OAuth redirect URIs. `http://localhost:3000` in dev, `https://dev-signals.vercel.app` in production. Used explicitly in Passport strategy config instead of relying on `proxy: true` header inference.
    - CORS allowed origins are set in `src/app.ts`; update the list when deploying (e.g. add your Vercel URL).
 
 3. Apply schema and seed data:
