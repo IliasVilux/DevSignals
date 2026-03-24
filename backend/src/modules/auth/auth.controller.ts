@@ -9,7 +9,7 @@ import {
   generateSignedState,
   verifySignedState,
 } from "./auth.service";
-import { signToken, verifyToken } from "../../lib/jwt";
+import { signToken } from "../../lib/jwt";
 import type { AuthUser } from "./auth.types";
 import { IUsersRepository } from "../users/users.repository";
 
@@ -143,19 +143,8 @@ export class AuthController {
   }
 
   getMe(req: Request, res: Response): void {
-    const token = req.cookies?.["ds_auth"];
-
-    if (!token) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
-
-    try {
-      const { iat: _iat, exp: _exp, ...user } = verifyToken(token);
-      res.json(user);
-    } catch {
-      res.status(401).json({ error: "Token expired or invalid" });
-    }
+    const { iat: _iat, exp: _exp, ...user } = req.user!;
+    res.json(user);
   }
 
   logout(_req: Request, res: Response): void {

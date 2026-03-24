@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { AuthController } from "../modules/auth/auth.controller";
 import { UsersRepository } from "../modules/users/users.repository";
+import { requireAuth } from "../middleware/requireAuth";
 
 const router = Router();
 const authController = new AuthController(new UsersRepository());
@@ -13,7 +14,7 @@ router.get("/github", (req, res, next) =>
   authController.initiateGithub(req, res, next)
 );
 router.get("/github/callback", authController.handleOAuthCallback("github"));
-router.get("/me", (req, res) => authController.getMe(req, res));
+router.get("/me", requireAuth, (req, res) => authController.getMe(req, res));
 router.post("/logout", (req, res) => authController.logout(req, res));
 
 export default router;

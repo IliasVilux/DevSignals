@@ -11,6 +11,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import passport from "passport";
 import skillsRoutes from "./routes/skills.routes";
+import profileRoutes from "./routes/profile.routes";
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use("/auth", authRoutes);
 app.use("/api/market", marketRoutes);
 app.use("/api/countries", countriesRoutes);
 app.use("/api/skills", skillsRoutes);
+app.use("/api/profile", profileRoutes);
 
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   console.error("[error]", err);
