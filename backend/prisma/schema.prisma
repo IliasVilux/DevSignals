@@ -57,11 +57,35 @@ model Job {
   @@index([postedAt])
 }
 
+model User {
+  id                String      @id @default(cuid())
+  provider          String
+  providerAccountId String
+  email             String
+  name              String
+  picture           String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  skills            UserSkill[]
+
+  @@unique([provider, providerAccountId])
+}
+
 model Skill {
   id             String        @id @default(cuid())
   name           String        @unique
   category       SkillCategory @default(OTHER)
   jobs           JobSkill[]
+  userSkills     UserSkill[]
+}
+
+model UserSkill {
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  String
+  skill   Skill  @relation(fields: [skillId], references: [id])
+  skillId String
+
+  @@id([userId, skillId])
 }
 
 model JobSkill {

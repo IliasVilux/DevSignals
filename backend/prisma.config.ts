@@ -1,3 +1,6 @@
+// @ts-ignore — loadEnvFile is native Node >= 20.12, not in Prisma's TS context
+process.loadEnvFile(".env");
+
 import { defineConfig, env } from "prisma/config";
 
 export default defineConfig({
@@ -6,6 +9,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: env("DATABASE_URL") 
+    url: env("DATABASE_URL"),
   },
 });

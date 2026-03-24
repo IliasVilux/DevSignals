@@ -31,7 +31,6 @@
   },
   "lint-staged": {
     "backend/**/*.ts": "backend/node_modules/.bin/prettier --write",
-    "backend/prisma/**/*.prisma": "backend/node_modules/.bin/prettier --write",
     "frontend/**/*.{ts,tsx,css}": "frontend/node_modules/.bin/prettier --write"
   },
   "devDependencies": {
