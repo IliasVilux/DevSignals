@@ -17,10 +17,12 @@ interface GithubProfile {
   photos?: { value: string }[];
 }
 
+const STATE_TTL_MS = 5 * 60 * 1000;
+
 export function normalizeGoogleProfile(profile: GoogleProfile): AuthUser {
   return {
-    sub: `google:${profile.id}`,
     provider: "google",
+    providerAccountId: profile.id,
     email: profile.emails?.[0]?.value ?? "",
     name: profile.displayName,
     picture: profile.photos?.[0]?.value ?? null,
@@ -29,15 +31,13 @@ export function normalizeGoogleProfile(profile: GoogleProfile): AuthUser {
 
 export function normalizeGithubProfile(profile: GithubProfile): AuthUser {
   return {
-    sub: `github:${profile.id}`,
     provider: "github",
+    providerAccountId: profile.id,
     email: profile.emails?.[0]?.value ?? "",
     name: profile.displayName || profile.username || "",
     picture: profile.photos?.[0]?.value ?? null,
   };
 }
-
-const STATE_TTL_MS = 5 * 60 * 1000;
 
 export function generateSignedState(): string {
   const timestamp = Date.now().toString();

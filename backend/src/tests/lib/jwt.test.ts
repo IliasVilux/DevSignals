@@ -7,10 +7,10 @@ vi.mock("../../config/env", () => ({
 }));
 
 import { signToken, verifyToken } from "../../lib/jwt";
-import type { AuthUser } from "../../modules/auth/auth.types";
+import type { TokenData } from "../../modules/auth/auth.types";
 
-const testUser: AuthUser = {
-  sub: "google:109876543210",
+const testUser: TokenData = {
+  sub: "cuid_abc123",
   provider: "google",
   email: "test@example.com",
   name: "Test User",

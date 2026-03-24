@@ -1,12 +1,20 @@
 export interface AuthUser {
-  sub: string;
   provider: "google" | "github";
+  providerAccountId: string;
   email: string;
   name: string;
   picture: string | null;
 }
 
-export interface JwtPayload extends AuthUser {
+export interface TokenData {
+  sub: string;
+  provider: string;
+  email: string;
+  name: string;
+  picture: string | null;
+}
+
+export interface JwtPayload extends TokenData {
   iat: number;
   exp: number;
 }

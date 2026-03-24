@@ -1,7 +1,7 @@
-import type { AuthUser } from "../modules/auth/auth.types";
+import type { JwtPayload } from "../modules/auth/auth.types";
 
 declare global {
   namespace Express {
-    interface User extends AuthUser {}
+    interface User extends JwtPayload {}
   }
 }

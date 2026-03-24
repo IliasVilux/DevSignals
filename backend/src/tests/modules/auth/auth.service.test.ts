@@ -29,7 +29,7 @@ describe("auth.service", () => {
 
       const user = normalizeGoogleProfile(profile);
 
-      expect(user.sub).toBe("google:109876543210");
+      expect(user.providerAccountId).toBe("109876543210");
       expect(user.provider).toBe("google");
       expect(user.email).toBe("jane@gmail.com");
       expect(user.name).toBe("Jane Doe");
@@ -66,7 +66,7 @@ describe("auth.service", () => {
 
       const user = normalizeGithubProfile(profile);
 
-      expect(user.sub).toBe("github:98765");
+      expect(user.providerAccountId).toBe("98765");
       expect(user.provider).toBe("github");
       expect(user.email).toBe("john@github.com");
       expect(user.name).toBe("John Dev");
@@ -93,7 +93,11 @@ describe("auth.service", () => {
 
     it("returns false for a tampered state", () => {
       const state = generateSignedState();
-      const tampered = state.slice(0, -1) + (state.endsWith("A") ? "B" : "A");
+      // Decode, flip a character in the HMAC, re-encode
+      const decoded = Buffer.from(state, "base64url").toString("utf8");
+      const flipped =
+        decoded.slice(0, -1) + (decoded.endsWith("a") ? "b" : "a");
+      const tampered = Buffer.from(flipped).toString("base64url");
       expect(verifySignedState(tampered)).toBe(false);
     });
 
