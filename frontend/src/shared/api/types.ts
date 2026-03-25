@@ -53,3 +53,9 @@ export interface AuthUser {
     name: string
     picture: string | null
 }
+
+export type Skill = {
+    id: string
+    name: string
+    category: SkillCategory
+}

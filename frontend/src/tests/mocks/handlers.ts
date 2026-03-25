@@ -28,6 +28,22 @@ export const handlers = [
         ])
     }),
 
+    http.get("*/api/skills", () => {
+        return HttpResponse.json([
+            { id: "skill-1", name: "TypeScript", category: "LANGUAGE" },
+            { id: "skill-2", name: "React", category: "FRAMEWORK" },
+            { id: "skill-3", name: "PostgreSQL", category: "DATABASE" },
+        ])
+    }),
+
+    http.get("*/api/profile/skills", () => {
+        return HttpResponse.json({ skillIds: [] })
+    }),
+
+    http.put("*/api/profile/skills", () => {
+        return HttpResponse.json({ message: "Skills updated" })
+    }),
+
     http.get("*/api/market/overview", () => {
         return HttpResponse.json({
             totalJobs: 100,

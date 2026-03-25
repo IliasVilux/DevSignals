@@ -1,5 +1,5 @@
 import { apiFetch } from "./client"
-import type { GetMarketOverviewParams, MarketOverview, Country } from "./types"
+import type { GetMarketOverviewParams, MarketOverview, Country, Skill } from "./types"
 
 export function getMarketOverview(params: GetMarketOverviewParams = {}): Promise<MarketOverview> {
     const queryParams = new URLSearchParams()
@@ -19,4 +19,20 @@ export function getMarketOverview(params: GetMarketOverviewParams = {}): Promise
 
 export function getCountries(): Promise<Country[]> {
     return apiFetch<Country[]>("/api/countries")
+}
+
+export function getSkills(): Promise<Skill[]> {
+    return apiFetch<Skill[]>("/api/skills")
+}
+
+export function getUserSkills(): Promise<{ skillIds: string[] }> {
+    return apiFetch<{ skillIds: string[] }>("/api/profile/skills")
+}
+
+export function updateUserSkills(skillIds: string[]): Promise<{ message: string }> {
+    return apiFetch<{ message: string }>("/api/profile/skills", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ skillIds }),
+    })
 }
