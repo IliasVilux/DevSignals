@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import { MemoryRouter } from "react-router-dom"
 import { AuthProvider } from "../../features/auth"
 import { AuthStatus } from "../../features/auth/components/AuthStatus"
 import { server } from "../mocks/server"
@@ -12,7 +13,9 @@ const createWrapper = () => {
     })
     return ({ children }: { children: React.ReactNode }) => (
         <QueryClientProvider client={queryClient}>
-            <AuthProvider>{children}</AuthProvider>
+            <AuthProvider>
+                <MemoryRouter>{children}</MemoryRouter>
+            </AuthProvider>
         </QueryClientProvider>
     )
 }
@@ -46,19 +49,31 @@ describe("AuthStatus", () => {
             server.use(http.get("*/auth/me", () => HttpResponse.json(mockUser)))
         })
 
-        it("shows the user name", async () => {
+        it("shows the user name in desktop trigger", async () => {
             render(<AuthStatus />, { wrapper: createWrapper() })
             await waitFor(() => expect(screen.getByText("Ilias Dev")).toBeInTheDocument())
         })
 
-        it("shows sign out button", async () => {
+        it("shows menu trigger and hamburger button", async () => {
             render(<AuthStatus />, { wrapper: createWrapper() })
+            await waitFor(() => {
+                expect(screen.getByText(/menu/i)).toBeInTheDocument()
+            })
+        })
+
+        it("shows sign out in mobile sheet when opened", async () => {
+            render(<AuthStatus />, { wrapper: createWrapper() })
+            await waitFor(() => expect(screen.getByText("Ilias Dev")).toBeInTheDocument())
+
+            const hamburger = screen.getAllByRole("button")[0]
+            await userEvent.click(hamburger)
+
             await waitFor(() =>
                 expect(screen.getByRole("button", { name: /sign out/i })).toBeInTheDocument()
             )
         })
 
-        it("calls logout endpoint and clears auth on sign out", async () => {
+        it("calls logout endpoint on sign out", async () => {
             let logoutCalled = false
             server.use(
                 http.post("*/auth/logout", () => {
@@ -68,6 +83,11 @@ describe("AuthStatus", () => {
             )
 
             render(<AuthStatus />, { wrapper: createWrapper() })
+            await waitFor(() => expect(screen.getByText("Ilias Dev")).toBeInTheDocument())
+
+            const hamburger = screen.getAllByRole("button")[0]
+            await userEvent.click(hamburger)
+
             await waitFor(() =>
                 expect(screen.getByRole("button", { name: /sign out/i })).toBeInTheDocument()
             )

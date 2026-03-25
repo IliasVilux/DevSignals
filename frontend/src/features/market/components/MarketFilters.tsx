@@ -1,4 +1,4 @@
-import { ArrowDownSLine } from "@/shared/ui/Icons"
+import { ChevronDown } from "lucide-react"
 import { useCountries } from "../hooks"
 
 type Props = {
@@ -54,10 +54,9 @@ export function MarketFilters({ countryCode, role, onCountryChange, onRoleChange
                             </option>
                         ))}
                     </select>
-                    <ArrowDownSLine
+                    <ChevronDown
                         className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                        width={16}
-                        height={16}
+                        size={16}
                     />
                 </div>
 
