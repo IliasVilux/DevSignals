@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { Link } from "react-router-dom"
-import { LogOutIcon, MenuIcon, XIcon } from "lucide-react"
+import { LogOutIcon, MenuIcon, XIcon, BarChart2Icon, UserIcon } from "lucide-react"
 import { useAuthContext } from "../hooks/useAuthContext"
 import { GitHub, Google } from "@/shared/ui/Icons"
 import { Avatar, AvatarImage, AvatarFallback } from "@/shared/ui/avatar"
@@ -123,11 +123,19 @@ export function AuthStatus() {
                             </SheetClose>
                         </div>
                     </SheetHeader>
-                    <nav className="flex">
+                    <nav className="flex border-t border-border">
+                        <Link
+                            to="/"
+                            className="flex-1 flex items-center gap-2 px-5 py-3.5 text-xs tracking-widest uppercase border-r border-border hover:bg-accent transition-colors cursor-pointer"
+                        >
+                            <BarChart2Icon size={14} />
+                            Market
+                        </Link>
                         <Link
                             to="/profile"
-                            className="flex-1 px-5 py-3.5 text-xs tracking-widest uppercase border-r border-border hover:bg-accent transition-colors"
+                            className="flex-1 flex items-center gap-2 px-5 py-3.5 text-xs tracking-widest uppercase border-r border-border hover:bg-accent transition-colors cursor-pointer"
                         >
+                            <UserIcon size={14} />
                             Profile
                         </Link>
                         <button
@@ -199,8 +207,24 @@ export function AuthStatus() {
                         </span>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator className="mx-0 my-0" />
-                    <DropdownMenuItem asChild className="rounded-none px-3 py-2.5">
-                        <Link to="/profile" className="w-full cursor-pointer tracking-wide">
+                    <DropdownMenuItem
+                        asChild
+                        className="rounded-none px-3 py-2.5 tracking-widest uppercase text-xs cursor-pointer"
+                    >
+                        <Link to="/" className="w-full cursor-pointer flex items-center gap-2">
+                            <BarChart2Icon size={14} />
+                            Market
+                        </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                        asChild
+                        className="rounded-none px-3 py-2.5 tracking-widest uppercase text-xs cursor-pointer"
+                    >
+                        <Link
+                            to="/profile"
+                            className="w-full cursor-pointer flex items-center gap-2"
+                        >
+                            <UserIcon size={14} />
                             Profile
                         </Link>
                     </DropdownMenuItem>
