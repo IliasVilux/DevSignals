@@ -150,7 +150,24 @@ Omission of both filters returns an overview over all jobs in the database.
 
 **`GET /auth/github/callback`** — Same as above for GitHub.
 
-**`GET /auth/me`** — Returns the authenticated user's payload if the `ds_auth` cookie is present and valid. Returns 401 otherwise. Used by the frontend on app load to restore auth state.
+**`GET /api/skills`** — Returns all skills in the database ordered by category then name. Public — no authentication required.
+
+**Response 200**: `{ id: string, name: string, category: SkillCategory }[]`
+
+---
+
+**`GET /api/profile/skills`** — Returns the skill IDs the authenticated user has selected. Requires `ds_auth` cookie.
+
+**Response 200**: `{ skillIds: string[] }`
+
+**`PUT /api/profile/skills`** — Replaces the authenticated user's skills atomically. Idempotent — sending the same array twice produces the same result. Requires `ds_auth` cookie.
+
+**Request body**: `{ skillIds: string[] }`
+**Response 200**: `{ message: "Skills updated" }`
+
+---
+
+**`GET /auth/me`** — Returns the authenticated user's payload from `req.user` (set by `requireAuth` middleware). Returns 401 if cookie is absent or invalid. Used by the frontend on app load to restore auth state.
 
 **Response 200**: `{ sub, provider, email, name, picture }` — `sub` is the User.id (cuid) from the database, not a provider-derived composite.
 
@@ -232,6 +249,12 @@ backend/
     │   ├── users/
     │   │   ├── users.types.ts     # UpsertUserData interface
     │   │   └── users.repository.ts # IUsersRepository interface + UsersRepository: upsert, getUserSkillIds, replaceUserSkills
+    │   ├── skills/
+    │   │   ├── skills.controller.ts # SkillsController: GET /api/skills → findAll()
+    │   │   └── skills.repository.ts # ISkillsRepository interface + SkillsRepository: findAll() ordered by category+name
+    │   ├── profile/
+    │   │   ├── profile.types.ts   # UpdateSkillsBody interface
+    │   │   └── profile.controller.ts # ProfileController (IUsersRepository DI): getProfileSkills, updateProfileSkills
     │   ├── countries/
     │   │   ├── countries.controller.ts
     │   │   ├── countries.repository.ts
@@ -247,7 +270,9 @@ backend/
     ├── routes/
     │   ├── auth.routes.ts         # /auth routes → AuthController (instantiated with UsersRepository, outside rate limiter)
     │   ├── market.routes.ts       # /api/market routes → market controller
-    │   └── countries.routes.ts    # /api/countries routes → countries controller
+    │   ├── countries.routes.ts    # /api/countries routes → countries controller
+    │   ├── skills.routes.ts       # /api/skills routes → SkillsController (public)
+    │   └── profile.routes.ts      # /api/profile routes → ProfileController (requireAuth on all routes)
     ├── tests/
     │   ├── ingestion/
     │   │   ├── job-normalizer.test.ts
@@ -261,6 +286,10 @@ backend/
     │       │   └── auth.service.test.ts   # profile normalization (providerAccountId), state generation/verification
     │       ├── users/
     │       │   └── users.repository.test.ts # upsert create/update, getUserSkillIds, replaceUserSkills
+    │       ├── skills/
+    │       │   └── skills.repository.test.ts # findAll returns ordered skills, empty array
+    │       ├── profile/
+    │       │   └── profile.controller.test.ts # getProfileSkills (with skills, empty, error), updateProfileSkills (normal, clear, error)
     │       ├── countries/
     │       │   └── countries.repository.test.ts
     │       ├── jobs/
