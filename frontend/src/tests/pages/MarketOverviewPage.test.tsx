@@ -4,6 +4,7 @@ import { AuthProvider } from "@/features/auth"
 import { render, screen, waitFor } from "@testing-library/react"
 import { server } from "../mocks/server"
 import { http, HttpResponse } from "msw"
+import { MemoryRouter } from "react-router-dom"
 
 vi.mock("recharts", async () => {
     const actual = await vi.importActual<typeof import("recharts")>("recharts")
@@ -40,9 +41,11 @@ const createWrapper = () => {
     })
 
     return ({ children }: { children: React.ReactNode }) => (
-        <QueryClientProvider client={queryClient}>
-            <AuthProvider>{children}</AuthProvider>
-        </QueryClientProvider>
+        <MemoryRouter>
+            <QueryClientProvider client={queryClient}>
+                <AuthProvider>{children}</AuthProvider>
+            </QueryClientProvider>
+        </MemoryRouter>
     )
 }
 
