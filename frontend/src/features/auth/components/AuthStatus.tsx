@@ -198,7 +198,7 @@ export function AuthStatus() {
                 <DropdownMenuContent
                     align="start"
                     sideOffset={0}
-                    className="rounded-none shadow-none border-border w-(--radix-popper-anchor-width) p-0 bg-background"
+                    className="rounded-none shadow-none border-border border-t-0 w-(--radix-popper-anchor-width) p-0 bg-background"
                 >
                     <DropdownMenuLabel className="flex flex-col gap-0.5 px-3 py-2.5">
                         <span className="text-sm font-medium">{user?.name}</span>
