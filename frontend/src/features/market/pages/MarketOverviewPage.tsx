@@ -128,7 +128,7 @@ export function MarketOverviewPage() {
                                     <p className="text-xs text-muted-foreground tracking-widest uppercase">
                                         avg. salary
                                     </p>
-                                    <p className="text-4xl font-semibold tracking-tight">
+                                    <p className="text-4xl font-mono font-semibold tracking-tight">
                                         {data.averageSalary
                                             ? `$${Math.round(data.averageSalary).toLocaleString()}`
                                             : "—"}

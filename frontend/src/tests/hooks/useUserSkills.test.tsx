@@ -42,7 +42,12 @@ describe("useUserSkills", () => {
     it("should fetch skills when authenticated", async () => {
         server.use(
             http.get("*/api/profile/skills", () =>
-                HttpResponse.json({ skillIds: ["skill-1", "skill-2"] })
+                HttpResponse.json({
+                    skills: [
+                        { skillId: "skill-1", level: "BASIC" },
+                        { skillId: "skill-2", level: "INTERMEDIATE" },
+                    ],
+                })
             )
         )
 
@@ -51,15 +56,20 @@ describe("useUserSkills", () => {
         })
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true))
-        expect(result.current.data).toEqual({ skillIds: ["skill-1", "skill-2"] })
+        expect(result.current.data).toEqual({
+            skills: [
+                { skillId: "skill-1", level: "BASIC" },
+                { skillId: "skill-2", level: "INTERMEDIATE" },
+            ],
+        })
     })
 
-    it("should return empty skillIds when user has no skills", async () => {
+    it("should return empty skills array when user has no skills", async () => {
         const { result } = renderHook(() => useUserSkills(), {
             wrapper: createWrapper(true),
         })
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true))
-        expect(result.current.data).toEqual({ skillIds: [] })
+        expect(result.current.data).toEqual({ skills: [] })
     })
 })

@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event"
 import { SkillSelector } from "../../features/profile/components/SkillSelector"
 import { server } from "../mocks/server"
 import { http, HttpResponse } from "msw"
-import type { Skill } from "@/shared/api/types"
+import type { Skill, UserSkill } from "@/shared/api/types"
 
 const mockSkills: Skill[] = [
     { id: "skill-1", name: "TypeScript", category: "LANGUAGE" },
@@ -45,7 +45,11 @@ describe("SkillSelector", () => {
         })
 
         it("pre-selects skills passed via userSkills prop", () => {
-            render(<SkillSelector skills={mockSkills} userSkills={["skill-1", "skill-3"]} />, {
+            const userSkills: UserSkill[] = [
+                { skillId: "skill-1", level: "BASIC" },
+                { skillId: "skill-3", level: "INTERMEDIATE" },
+            ]
+            render(<SkillSelector skills={mockSkills} userSkills={userSkills} />, {
                 wrapper: createWrapper(),
             })
 
@@ -64,8 +68,8 @@ describe("SkillSelector", () => {
         })
     })
 
-    describe("toggle interaction", () => {
-        it("selects an unselected skill on click", async () => {
+    describe("cycle interaction", () => {
+        it("first click sets skill to BASIC (aria-pressed true)", async () => {
             render(<SkillSelector skills={mockSkills} />, { wrapper: createWrapper() })
 
             const typescript = screen.getByRole("button", { name: "TypeScript" })
@@ -76,20 +80,27 @@ describe("SkillSelector", () => {
             expect(typescript).toHaveAttribute("aria-pressed", "true")
         })
 
-        it("deselects a selected skill on click", async () => {
-            render(<SkillSelector skills={mockSkills} userSkills={["skill-1"]} />, {
-                wrapper: createWrapper(),
-            })
+        it("cycles through BASIC → INTERMEDIATE → ADVANCED → unselected", async () => {
+            render(<SkillSelector skills={mockSkills} />, { wrapper: createWrapper() })
 
             const typescript = screen.getByRole("button", { name: "TypeScript" })
+
+            await userEvent.click(typescript) // → BASIC
             expect(typescript).toHaveAttribute("aria-pressed", "true")
+            expect(typescript).toHaveAttribute("data-level", "BASIC")
 
-            await userEvent.click(typescript)
+            await userEvent.click(typescript) // → INTERMEDIATE
+            expect(typescript).toHaveAttribute("data-level", "INTERMEDIATE")
 
+            await userEvent.click(typescript) // → ADVANCED
+            expect(typescript).toHaveAttribute("data-level", "ADVANCED")
+
+            await userEvent.click(typescript) // → removed
             expect(typescript).toHaveAttribute("aria-pressed", "false")
+            expect(typescript).not.toHaveAttribute("data-level")
         })
 
-        it("calls PUT with updated skill ids on toggle", async () => {
+        it("calls PUT with UserSkill array on cycle", async () => {
             let capturedBody: unknown = null
             server.use(
                 http.put("*/api/profile/skills", async ({ request }) => {
@@ -98,20 +109,26 @@ describe("SkillSelector", () => {
                 })
             )
 
-            render(<SkillSelector skills={mockSkills} userSkills={["skill-1"]} />, {
+            const userSkills: UserSkill[] = [{ skillId: "skill-1", level: "BASIC" }]
+            render(<SkillSelector skills={mockSkills} userSkills={userSkills} />, {
                 wrapper: createWrapper(),
             })
 
             await userEvent.click(screen.getByRole("button", { name: "React" }))
 
             await waitFor(() => {
-                expect(capturedBody).toEqual({ skillIds: ["skill-1", "skill-3"] })
+                expect(capturedBody).toEqual({
+                    skills: [
+                        { skillId: "skill-1", level: "BASIC" },
+                        { skillId: "skill-3", level: "BASIC" },
+                    ],
+                })
             })
         })
     })
 
     describe("error rollback", () => {
-        it("reverts selection when PUT fails", async () => {
+        it("reverts to unselected when PUT fails on first click", async () => {
             server.use(http.put("*/api/profile/skills", () => HttpResponse.error()))
 
             render(<SkillSelector skills={mockSkills} />, { wrapper: createWrapper() })
@@ -126,35 +143,38 @@ describe("SkillSelector", () => {
             })
         })
 
-        it("reverts deselection when PUT fails", async () => {
+        it("reverts to previous level when PUT fails while cycling", async () => {
             server.use(http.put("*/api/profile/skills", () => HttpResponse.error()))
 
-            render(<SkillSelector skills={mockSkills} userSkills={["skill-1"]} />, {
+            const userSkills: UserSkill[] = [{ skillId: "skill-1", level: "BASIC" }]
+            render(<SkillSelector skills={mockSkills} userSkills={userSkills} />, {
                 wrapper: createWrapper(),
             })
 
             const typescript = screen.getByRole("button", { name: "TypeScript" })
             expect(typescript).toHaveAttribute("aria-pressed", "true")
 
-            await userEvent.click(typescript)
+            await userEvent.click(typescript) // tries INTERMEDIATE, fails → stays BASIC
 
             await waitFor(() => {
                 expect(typescript).toHaveAttribute("aria-pressed", "true")
+                expect(typescript).toHaveAttribute("data-level", "BASIC")
             })
         })
     })
 
     describe("feedback notification", () => {
-        it("shows added message after selecting a skill", async () => {
+        it("shows level message after first click", async () => {
             render(<SkillSelector skills={mockSkills} />, { wrapper: createWrapper() })
 
             await userEvent.click(screen.getByRole("button", { name: "TypeScript" }))
 
-            await waitFor(() => expect(screen.getByText("TypeScript added")).toBeInTheDocument())
+            await waitFor(() => expect(screen.getByText("TypeScript — basic")).toBeInTheDocument())
         })
 
-        it("shows removed message after deselecting a skill", async () => {
-            render(<SkillSelector skills={mockSkills} userSkills={["skill-1"]} />, {
+        it("shows removed message after cycling past ADVANCED", async () => {
+            const userSkills: UserSkill[] = [{ skillId: "skill-1", level: "ADVANCED" }]
+            render(<SkillSelector skills={mockSkills} userSkills={userSkills} />, {
                 wrapper: createWrapper(),
             })
 

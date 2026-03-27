@@ -1,11 +1,27 @@
 import { useState } from "react"
-import type { Skill } from "@/shared/api/types"
+import type { Skill, UserSkill, SkillLevel } from "@/shared/api/types"
 import { useUpdateUserSkills } from "../hooks"
 import { useScrambleText } from "../hooks/useScrambleText"
 
 type Props = {
     skills: Skill[]
-    userSkills?: string[]
+    userSkills?: UserSkill[]
+}
+
+const LEVELS: SkillLevel[] = ["BASIC", "INTERMEDIATE", "ADVANCED"]
+
+const levelStyle: Record<SkillLevel, string> = {
+    BASIC: "border border-(--indigo)/50 text-(--indigo)/70 bg-(--indigo)/5 hover:bg-(--indigo)/10",
+    INTERMEDIATE:
+        "border border-(--indigo) text-(--indigo) bg-(--indigo)/10 hover:bg-(--indigo)/20",
+    ADVANCED:
+        "border border-(--indigo) text-(--indigo) bg-(--indigo)/20 hover:bg-(--indigo)/30 font-medium",
+}
+
+const levelBarWidth: Record<SkillLevel, string> = {
+    BASIC: "w-1/3",
+    INTERMEDIATE: "w-2/3",
+    ADVANCED: "w-full",
 }
 
 function groupByCategory(skills: Skill[]) {
@@ -21,32 +37,50 @@ function groupByCategory(skills: Skill[]) {
 
 export function SkillSelector({ skills, userSkills }: Props) {
     const byCategory = groupByCategory(skills)
-    const [selectedIds, setSelectedIds] = useState<string[]>(userSkills || [])
+    const [selectedSkills, setSelectedSkills] = useState<Map<string, SkillLevel>>(
+        () => new Map((userSkills || []).map((us) => [us.skillId, us.level]))
+    )
     const { mutate } = useUpdateUserSkills()
-
     const [actionType, setActionType] = useState<"add" | "remove">("add")
     const { displayText, phase, trigger } = useScrambleText()
 
-    function toggle(id: string) {
+    function cycle(id: string) {
         const skill = skills.find((s) => s.id === id)
-        const isAdding = !selectedIds.includes(id)
-        const newIds = isAdding ? [...selectedIds, id] : selectedIds.filter((s) => s !== id)
+        const current = selectedSkills.get(id)
+        const currentIndex = current !== undefined ? LEVELS.indexOf(current) : -1
+        const next = LEVELS[currentIndex + 1]
 
-        const previousIds = selectedIds
-        setSelectedIds(newIds)
-        mutate(newIds, {
-            onError: () => setSelectedIds(previousIds),
+        const previousSkills = new Map(selectedSkills)
+        const newSkills = new Map(selectedSkills)
+        if (next !== undefined) {
+            newSkills.set(id, next)
+        } else {
+            newSkills.delete(id)
+        }
+
+        setSelectedSkills(newSkills)
+
+        const newSkillsArray: UserSkill[] = Array.from(newSkills.entries()).map(
+            ([skillId, level]) => ({ skillId, level })
+        )
+        mutate(newSkillsArray, {
+            onError: () => setSelectedSkills(previousSkills),
         })
 
         if (skill) {
-            setActionType(isAdding ? "add" : "remove")
-            trigger(isAdding ? `${skill.name} added` : `${skill.name} removed`)
+            setActionType(next !== undefined ? "add" : "remove")
+            trigger(
+                next !== undefined
+                    ? `${skill.name} — ${next.toLowerCase()}`
+                    : `${skill.name} removed`
+            )
         }
     }
 
     return (
-        <section className="mb-12">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+        <section>
+            {/* Header */}
+            <div className="md:border-x border-b border-border px-8 py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <h1 className="text-2xl">Select your skills</h1>
                 <p
                     className={`font-mono text-xs tracking-wide transition-opacity duration-500 ${
@@ -57,34 +91,42 @@ export function SkillSelector({ skills, userSkills }: Props) {
                     {phase !== "hidden" ? displayText : "\u00A0"}
                 </p>
             </div>
-            <div className="space-y-12">
-                {Object.entries(byCategory).map(([category, categorySkills]) => (
-                    <div key={category}>
-                        <span className="text-sm tracking-widest uppercase text-muted-foreground">
-                            {category}
-                        </span>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 mt-2">
-                            {categorySkills.map((skill) => {
-                                const selected = selectedIds.includes(skill.id)
-                                return (
-                                    <button
-                                        key={skill.id}
-                                        onClick={() => toggle(skill.id)}
-                                        aria-pressed={selected}
-                                        className={`px-3 py-2 text-xs tracking-wide text-center transition-colors cursor-pointer ${
-                                            selected
-                                                ? "border border-(--indigo) text-(--indigo) bg-(--indigo)/10 hover:bg-(--indigo)/20"
-                                                : "border border-border text-muted-foreground hover:bg-accent hover:text-foreground"
+
+            {/* Category blocks */}
+            {Object.entries(byCategory).map(([category, categorySkills]) => (
+                <div key={category} className="md:border-x border-b border-border">
+                    <p className="px-8 pt-5 pb-3 text-xs tracking-widest uppercase text-muted-foreground">
+                        {category}
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 px-8 pb-6">
+                        {categorySkills.map((skill) => {
+                            const level = selectedSkills.get(skill.id)
+                            const isSelected = level !== undefined
+                            return (
+                                <button
+                                    key={skill.id}
+                                    onClick={() => cycle(skill.id)}
+                                    aria-pressed={isSelected}
+                                    data-level={level ?? undefined}
+                                    className={`relative flex items-center justify-center h-10 px-3 text-xs tracking-wide text-center transition-colors cursor-pointer overflow-hidden ${
+                                        isSelected && level
+                                            ? levelStyle[level]
+                                            : "border border-border text-muted-foreground hover:bg-accent hover:text-foreground"
+                                    }`}
+                                >
+                                    <span>{skill.name}</span>
+                                    <span
+                                        aria-hidden="true"
+                                        className={`absolute bottom-0 left-0 h-0.5 bg-(--indigo) transition-all duration-300 ${
+                                            level ? levelBarWidth[level] : "w-0"
                                         }`}
-                                    >
-                                        {skill.name}
-                                    </button>
-                                )
-                            })}
-                        </div>
+                                    />
+                                </button>
+                            )
+                        })}
                     </div>
-                ))}
-            </div>
+                </div>
+            ))}
         </section>
     )
 }

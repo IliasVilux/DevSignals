@@ -23,23 +23,30 @@ export function ProfilePage() {
         <div className="min-h-screen">
             <AppHeader />
 
-            <main className="max-w-6xl mx-auto px-8 py-6">
-                <p className="text-xs text-muted-foreground tracking-widest uppercase mb-8">
-                    profile
-                </p>
+            <main className="max-w-6xl mx-auto">
+                {/* Page label — mirrors the filter bar pattern from MarketOverviewPage */}
+                <div className="border-b border-border px-8 py-3 md:border-x">
+                    <p className="text-xs text-muted-foreground tracking-widest uppercase">
+                        profile
+                    </p>
+                </div>
 
                 {isLoading && (
-                    <div aria-live="polite" className="space-y-12">
+                    <div aria-live="polite">
                         <span className="sr-only">loading profile</span>
-                        <Skeleton className="h-6 w-30" />
+                        {/* Title skeleton */}
+                        <div className="md:border-x border-b border-border px-8 py-6">
+                            <Skeleton className="h-7 w-48" />
+                        </div>
+                        {/* Category skeletons */}
                         {[1, 2, 3].map((i) => (
-                            <div key={i}>
-                                <div className="mb-2">
+                            <div key={i} className="md:border-x border-b border-border">
+                                <div className="px-8 pt-5 pb-3">
                                     <Skeleton className="h-3 w-20" />
                                 </div>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 px-8 pb-6">
                                     {Array.from({ length: 6 }).map((_, j) => (
-                                        <Skeleton key={j} className="h-8" />
+                                        <Skeleton key={j} className="h-10" />
                                     ))}
                                 </div>
                             </div>
@@ -48,7 +55,7 @@ export function ProfilePage() {
                 )}
 
                 {isError && (
-                    <div className="py-16 flex flex-col items-center gap-4 text-center">
+                    <div className="md:border-x border-b border-border px-8 py-16 flex flex-col items-center gap-4 text-center">
                         <p className="text-xs text-destructive tracking-widest uppercase">
                             failed to load profile
                         </p>
@@ -62,7 +69,7 @@ export function ProfilePage() {
                 )}
 
                 {allSkills && userSkills && (
-                    <SkillSelector skills={allSkills} userSkills={userSkills.skillIds} />
+                    <SkillSelector skills={allSkills} userSkills={userSkills.skills} />
                 )}
             </main>
         </div>

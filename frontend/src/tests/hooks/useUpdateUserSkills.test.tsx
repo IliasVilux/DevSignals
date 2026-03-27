@@ -3,6 +3,7 @@ import { renderHook, waitFor, act } from "@testing-library/react"
 import { useUpdateUserSkills } from "@/features/profile/hooks/useUpdateUserSkills"
 import { server } from "../mocks/server"
 import { http, HttpResponse } from "msw"
+import type { UserSkill } from "@/shared/api/types"
 
 const createWrapper = () => {
     const queryClient = new QueryClient({
@@ -14,7 +15,7 @@ const createWrapper = () => {
 }
 
 describe("useUpdateUserSkills", () => {
-    it("should call PUT /api/profile/skills with skillIds", async () => {
+    it("should call PUT /api/profile/skills with skills array", async () => {
         let receivedBody: unknown = null
         server.use(
             http.put("*/api/profile/skills", async ({ request }) => {
@@ -23,14 +24,19 @@ describe("useUpdateUserSkills", () => {
             })
         )
 
+        const skills: UserSkill[] = [
+            { skillId: "skill-1", level: "BASIC" },
+            { skillId: "skill-3", level: "INTERMEDIATE" },
+        ]
+
         const { result } = renderHook(() => useUpdateUserSkills(), {
             wrapper: createWrapper(),
         })
 
-        await act(() => result.current.mutateAsync(["skill-1", "skill-3"]))
+        await act(() => result.current.mutateAsync(skills))
         await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
-        expect(receivedBody).toEqual({ skillIds: ["skill-1", "skill-3"] })
+        expect(receivedBody).toEqual({ skills })
     })
 
     it("should return error state when API fails", async () => {
@@ -42,7 +48,7 @@ describe("useUpdateUserSkills", () => {
 
         await act(async () => {
             try {
-                await result.current.mutateAsync(["skill-1"])
+                await result.current.mutateAsync([{ skillId: "skill-1", level: "BASIC" }])
             } catch {
                 // expected
             }

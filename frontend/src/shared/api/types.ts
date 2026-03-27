@@ -59,3 +59,10 @@ export type Skill = {
     name: string
     category: SkillCategory
 }
+
+export type SkillLevel = "BASIC" | "INTERMEDIATE" | "ADVANCED"
+
+export type UserSkill = {
+    skillId: string
+    level: SkillLevel
+}

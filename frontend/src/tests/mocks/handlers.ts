@@ -37,7 +37,7 @@ export const handlers = [
     }),
 
     http.get("*/api/profile/skills", () => {
-        return HttpResponse.json({ skillIds: [] })
+        return HttpResponse.json({ skills: [] })
     }),
 
     http.put("*/api/profile/skills", () => {
