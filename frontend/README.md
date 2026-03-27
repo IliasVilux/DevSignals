@@ -19,7 +19,7 @@ The frontend follows a **feature-based architecture** that separates application
 | Layer       | Responsibility                                                    |
 | ----------- | ----------------------------------------------------------------- |
 | `app/`      | Root composition, global providers, routing                       |
-| `features/` | Domain-scoped components, hooks, and pages                        |
+| `features/` | Domain-scoped components, hooks, and pages (market, auth, profile)|
 | `shared/`   | Cross-feature API client, types, utility hooks, and UI primitives |
 
 ---
@@ -83,20 +83,32 @@ src/
 │   │   ├── context.ts                 # AuthContext creation + AuthContextValue type (plain .ts, no components)
 │   │   ├── AuthContext.tsx            # AuthProvider component only
 │   │   └── index.ts                   # Feature public exports
-│   └── market/
+│   ├── market/
+│   │   ├── components/
+│   │   │   ├── index.ts                       # Component exports
+│   │   │   ├── MarketFilters.tsx              # Country select + role text input + freshness label
+│   │   │   ├── RemoteDistributionChart.tsx    # Horizontal bar chart: remote/hybrid/onsite
+│   │   │   ├── SkillCategoryBreakdown.tsx     # Per-category section: desktop chart + mobile list
+│   │   │   ├── TopRolesChart.tsx              # Dual-bar chart: count + avgSalary per role
+│   │   │   └── TopSkillsChart.tsx             # Horizontal bar chart: top 10 skills by category
+│   │   ├── hooks/
+│   │   │   ├── index.ts                   # Hook exports
+│   │   │   ├── useCountries.ts            # Fetches country list for filter select
+│   │   │   └── useMarketOverview.ts       # Fetches market analytics data
+│   │   ├── pages/
+│   │   │   └── MarketOverviewPage.tsx     # Main analytics dashboard (uses AppHeader)
+│   │   └── index.ts                       # Feature public exports
+│   └── profile/
 │       ├── components/
-│       │   ├── index.ts                       # Component exports
-│       │   ├── MarketFilters.tsx              # Country select + role text input + freshness label
-│       │   ├── RemoteDistributionChart.tsx    # Horizontal bar chart: remote/hybrid/onsite
-│       │   ├── SkillCategoryBreakdown.tsx     # Per-category section: desktop chart + mobile list
-│       │   ├── TopRolesChart.tsx              # Dual-bar chart: count + avgSalary per role
-│       │   └── TopSkillsChart.tsx             # Horizontal bar chart: top 10 skills by category
+│       │   └── SkillSelector.tsx           # Pill-based skill toggle grouped by category, optimistic updates
 │       ├── hooks/
 │       │   ├── index.ts                   # Hook exports
-│       │   ├── useCountries.ts            # Fetches country list for filter select
-│       │   └── useMarketOverview.ts       # Fetches market analytics data
+│       │   ├── useSkills.ts               # Fetches all available skills (public)
+│       │   ├── useUserSkills.ts           # Fetches user's selected skills (auth-gated)
+│       │   ├── useUpdateUserSkills.ts     # Mutation: PUT skills with optimistic cache update + rollback
+│       │   └── useScrambleText.ts         # Character decode animation for toggle feedback
 │       ├── pages/
-│       │   └── MarketOverviewPage.tsx     # Main analytics dashboard
+│       │   └── ProfilePage.tsx            # Profile page with SkillSelector, skeleton, error handling
 │       └── index.ts                       # Feature public exports
 │
 ├── shared/
@@ -108,27 +120,37 @@ src/
 │   │   ├── index.ts            # Shared hook exports
 │   │   └── useDebounce.ts      # Debounce utility for input performance
 │   └── ui/
+│       ├── AppHeader.tsx       # Shared header: DevSignals title (link to /) + AuthStatus
 │       ├── avatar.tsx          # shadcn/ui Avatar with size variants (sm/default/lg)
-│       ├── Icons.tsx           # SVG icon components: ArrowDownSLine, Google, GitHub
+│       ├── checkbox.tsx        # shadcn/ui Checkbox (Radix-based)
+│       ├── dropdown-menu.tsx   # shadcn/ui DropdownMenu (no animation, used by AuthStatus desktop)
+│       ├── Icons.tsx           # Brand SVGs only: Google, GitHub (lucide-react for generic icons)
 │       ├── separator.tsx       # shadcn/ui Separator (horizontal/vertical)
+│       ├── sheet.tsx           # shadcn/ui Sheet with showCloseButton prop (used by AuthStatus mobile)
+│       ├── skeleton.tsx        # shadcn/ui Skeleton for loading states
 │       └── tooltip.tsx         # shadcn/ui Tooltip primitive (Radix-based)
 │
 └── tests/
     ├── components/
-    │   ├── AuthStatus.test.tsx               # Sign-in state, authenticated state, logout
+    │   ├── AuthStatus.test.tsx               # Sign-in state, authenticated state, sheet sign-out, logout API call
     │   ├── MarketFilters.test.tsx            # Interactions: country select, role input
     │   ├── RemoteDistributionChart.test.tsx  # Data transformation to chart entries
+    │   ├── SkillSelector.test.tsx            # Category grouping, pre-selection, toggle, PUT body, rollback, feedback
     │   └── TopRolesChart.test.tsx            # Data transformation to chart entries
     ├── hooks/
     │   ├── useAuth.test.tsx                  # Loading, unauthenticated (401), authenticated (200)
-    │   ├── useDebounce.test.ts               # Timing and debounce behavior
     │   ├── useCountries.test.tsx             # Fetch, loading, error states
-    │   └── useMarketOverview.test.tsx        # Fetch, loading, error, filter reactivity
+    │   ├── useDebounce.test.ts               # Timing and debounce behavior
+    │   ├── useMarketOverview.test.tsx        # Fetch, loading, error, filter reactivity
+    │   ├── useScrambleText.test.tsx          # Phases, scramble, spaces, re-trigger (vi.useFakeTimers)
+    │   ├── useSkills.test.tsx                # Loading, success, error
+    │   ├── useUpdateUserSkills.test.tsx      # Successful PUT with body, error state
+    │   └── useUserSkills.test.tsx            # No fetch when unauth, fetch when auth, empty skillIds
     ├── mocks/
-    │   ├── handlers.ts                       # MSW mock API handlers (incl. /auth/me → 401)
+    │   ├── handlers.ts                       # MSW mock API handlers (incl. /auth/me, /api/skills, /api/profile/skills)
     │   └── server.ts                         # MSW node server setup
     ├── pages/
-    │   ├── AuthCallbackPage.test.tsx         # Redirect to / or /login based on ?success param
+    │   ├── AuthCallbackPage.test.tsx         # Redirect to / based on ?success param
     │   └── MarketOverviewPage.test.tsx       # Integration: full filter → fetch → render flow
     └── setup.ts                              # MSW server lifecycle + jest-dom setup
 ```
@@ -145,7 +167,7 @@ The `MarketOverviewPage` orchestrates the dashboard:
 - Passes debounced role value to `useMarketOverview` to avoid over-fetching
 - Renders filter controls, stat blocks, and chart components
 - Responsive grid layout: stats + remote distribution on top, top roles full-width below
-- **Loading state**: animate-pulse skeleton grid mirroring the full layout (sr-only label for accessibility)
+- **Loading state**: skeleton grid mirroring the full layout (sr-only label for accessibility)
 - **Empty state**: "no jobs found" message when `totalJobs === 0` (e.g. role filter with no results)
 - **Error state**: visible destructive-color error message when the API call fails
 
@@ -173,12 +195,15 @@ The `MarketOverviewPage` orchestrates the dashboard:
 
 Consumed from `shared/api/`:
 
-| Endpoint                   | Hook                | Description                                                                                                                                                                            |
-| -------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /api/market/overview` | `useMarketOverview` | Returns `totalJobs`, `averageSalary`, `remoteDistribution`, `topRoles` (with `avgSalary`), `topSkills`, `skillCategoryBreakdown` (top 5 skills per category with count and percentage) |
-| `GET /api/countries`       | `useCountries`      | Returns `{ id, code, name, lastIngestedAt }[]` for filter select and freshness label                                                                                                   |
-| `GET /auth/me`             | `useAuth`           | Returns `{ sub, provider, email, name, picture }` if authenticated, 401 otherwise. Called on app load to restore session from the `ds_auth` httpOnly cookie                           |
-| `POST /auth/logout`        | (direct fetch)      | Clears the `ds_auth` cookie. Called from `AuthStatus` on sign-out click, then query cache is cleared                                                                                  |
+| Endpoint                   | Hook                  | Description                                                                                                                                                                            |
+| -------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/market/overview` | `useMarketOverview`   | Returns `totalJobs`, `averageSalary`, `remoteDistribution`, `topRoles` (with `avgSalary`), `topSkills`, `skillCategoryBreakdown` (top 5 skills per category with count and percentage) |
+| `GET /api/countries`       | `useCountries`        | Returns `{ id, code, name, lastIngestedAt }[]` for filter select and freshness label                                                                                                   |
+| `GET /api/skills`          | `useSkills`           | Returns all skills ordered by category + name. Public, no auth required                                                                                                                |
+| `GET /api/profile/skills`  | `useUserSkills`       | Returns `{ skillIds: string[] }` for the authenticated user. `enabled: isAuthenticated` prevents fetch when not logged in                                                              |
+| `PUT /api/profile/skills`  | `useUpdateUserSkills` | Replaces user's skills. Optimistic update via `onMutate` + `setQueryData` — no refetch. `onError` rollback restores previous cache                                                    |
+| `GET /auth/me`             | `useAuth`             | Returns `{ sub, provider, email, name, picture }` if authenticated, 401 otherwise. Called on app load to restore session from the `ds_auth` httpOnly cookie                           |
+| `POST /auth/logout`        | (direct fetch)        | Clears the `ds_auth` cookie. Called from `AuthStatus` on sign-out click, then query cache is cleared                                                                                  |
 
 Query params forwarded by `useMarketOverview`: `countryCode`, `role` (debounced).
 
@@ -261,6 +286,36 @@ Make sure the backend is running and accessible at the configured base URL.
 
 ## Intentional Simplifications (Current Phase)
 
-- **No protected routes** — the market overview is public by design; `ProtectedRoute` infrastructure is ready for when Personal Match Scoring (v0.7) requires gating behind auth
-- **Auth state not one-time-use CSRF** — the backend HMAC state is not invalidated on use; the fix (Redis-based revocation) is deferred until the User model is added in the next phase
+### Profile Page (`/profile`) — v0.7
+
+The `ProfilePage` displays the `SkillSelector` component for authenticated users:
+
+- **Loading state**: skeleton that mirrors the SkillSelector structure (3 mock categories with 6 pill placeholders each)
+- **Error state**: retry button that refetches skills
+- **Data gating**: SkillSelector renders only when both `allSkills` and `userSkills` are available — prevents `useState` from initializing with `[]` before data arrives
+
+**SkillSelector**
+
+- Groups skills by category using a pure `groupByCategory()` function (frontend reduce, not backend endpoint)
+- Pill-based toggle buttons in a responsive grid (`2→3→4→6` columns)
+- `aria-pressed` for accessibility — screen readers announce toggle state
+- Selected style: indigo accent (`border-(--indigo) text-(--indigo) bg-(--indigo)/10`) — subtle, not harsh inverted colors
+- Immediate toggle: click updates local `selectedIds` + fires `mutate(newIds)` — no Save button
+- **Optimistic update**: `useUpdateUserSkills` uses `onMutate` with `setQueryData` to write directly to the React Query cache. No `invalidateQueries`, no refetch after PUT
+- **Double rollback on error**: both the React Query cache (`onError` in the mutation hook) and the component's local `selectedIds` state (`onError` callback in `mutate()`) are restored to their previous values
+- **Scramble text feedback**: `useScrambleText` hook provides a character-by-character decode animation. Phases: hidden → scrambling (30ms/char) → visible (3s) → fading (500ms CSS transition) → hidden. Green text for "added", muted for "removed"
+
+**AuthStatus (v0.7 redesign)**
+
+- **Desktop**: Radix DropdownMenu (no animation) anchored to the trigger block. Items: Market (BarChart2Icon), Profile (UserIcon), Sign out (LogOutIcon, destructive variant). Full-width items with `rounded-none`, zero-margin separators
+- **Mobile**: Sheet from top with custom close button aligned to avatar. Same navigation items as desktop
+- **Icons**: lucide-react for generic UI icons; custom SVGs only for Google and GitHub brand logos
+
+---
+
+## Intentional Simplifications (Current Phase)
+
+- **No protected routes** — the market overview is public by design; profile endpoints are auth-gated at the API level, not at the route level
+- **Auth state not one-time-use CSRF** — the backend HMAC state is not invalidated on use; the fix (Redis-based revocation) is deferred
 - **Vercel proxy for auth** — `/auth/*` and `/api/*` are proxied to Render via `vercel.json` rewrites. This makes the `ds_auth` cookie first-party (set on `dev-signals.vercel.app`), solving Safari ITP and Brave cross-origin cookie blocking without requiring a custom domain
+- **No debounce on skill toggle mutations** — each click fires a PUT immediately. For the current volume (~30 skills, low toggle frequency), this is fine. If rapid-fire toggling becomes an issue, a debounced batch mutation can be added
