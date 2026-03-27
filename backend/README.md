@@ -102,7 +102,7 @@ Separation is strict: controllers and services use **typed DTOs** (e.g. `MarketO
 ## Data Model & Schema
 
 - **`User`** – `id` (cuid, auto-generated), `provider` ("google" | "github"), `providerAccountId` (raw provider ID), `email`, `name`, `picture` (nullable), `createdAt`, `updatedAt`. Unique constraint: `@@unique([provider, providerAccountId])`. Upserted on every OAuth login.
-- **`UserSkill`** – join table: composite PK `(userId, skillId)`. `onDelete: Cascade` on user relation — deleting a user removes their skill selections. Links `User` ↔ `Skill`.
+- **`UserSkill`** – join table: composite PK `(userId, skillId)`. `onDelete: Cascade` on user relation — deleting a user removes their skill selections. `level SkillLevel @default(BASIC)` — stores the user's self-assessed proficiency for each skill. Links `User` ↔ `Skill`.
 - **`Country`** – `id` (cuid), `name`, `code` (unique), `lastIngestedAt` (optional timestamp). Referenced by jobs; seeded once. `lastIngestedAt` is stamped after each successful ingestion run for that country.
 - **`Job`** – core entity:
   - Identity: `externalId` (from provider) + `countryId` → **unique constraint** so the same Adzuna job in the same country is stored once; re-ingestion uses `createMany(..., skipDuplicates: true)`.
@@ -156,13 +156,13 @@ Omission of both filters returns an overview over all jobs in the database.
 
 ---
 
-**`GET /api/profile/skills`** — Returns the skill IDs the authenticated user has selected. Requires `ds_auth` cookie.
+**`GET /api/profile/skills`** — Returns the authenticated user's skills with proficiency levels. Requires `ds_auth` cookie.
 
-**Response 200**: `{ skillIds: string[] }`
+**Response 200**: `{ skills: { skillId: string, level: "BASIC" | "INTERMEDIATE" | "ADVANCED" }[] }`
 
 **`PUT /api/profile/skills`** — Replaces the authenticated user's skills atomically. Idempotent — sending the same array twice produces the same result. Requires `ds_auth` cookie.
 
-**Request body**: `{ skillIds: string[] }`
+**Request body**: `{ skills: { skillId: string, level: "BASIC" | "INTERMEDIATE" | "ADVANCED" }[] }`
 **Response 200**: `{ message: "Skills updated" }`
 
 ---
@@ -247,8 +247,8 @@ backend/
     │   │   ├── auth.service.ts    # Pure functions: normalizeGoogleProfile(), normalizeGithubProfile(), generateSignedState(), verifySignedState()
     │   │   └── auth.controller.ts # AuthController class (IUsersRepository DI) + Passport strategies + OAuth handlers + getMe + logout
     │   ├── users/
-    │   │   ├── users.types.ts     # UpsertUserData interface
-    │   │   └── users.repository.ts # IUsersRepository interface + UsersRepository: upsert, getUserSkillIds, replaceUserSkills
+    │   │   ├── users.types.ts     # UpsertUserData interface; SkillWithLevel { skillId, level } — SkillLevel imported from generated Prisma client
+    │   │   └── users.repository.ts # IUsersRepository interface + UsersRepository: upsert, getUserSkills (→ SkillWithLevel[]), replaceUserSkills
     │   ├── skills/
     │   │   ├── skills.controller.ts # SkillsController: GET /api/skills → findAll()
     │   │   └── skills.repository.ts # ISkillsRepository interface + SkillsRepository: findAll() ordered by category+name
@@ -285,7 +285,7 @@ backend/
     │       ├── auth/
     │       │   └── auth.service.test.ts   # profile normalization (providerAccountId), state generation/verification
     │       ├── users/
-    │       │   └── users.repository.test.ts # upsert create/update, getUserSkillIds, replaceUserSkills
+    │       │   └── users.repository.test.ts # upsert create/update, getUserSkills (with/without data), replaceUserSkills (normal/empty, with level)
     │       ├── skills/
     │       │   └── skills.repository.test.ts # findAll returns ordered skills, empty array
     │       ├── profile/

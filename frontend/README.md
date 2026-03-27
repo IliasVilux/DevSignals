@@ -200,8 +200,8 @@ Consumed from `shared/api/`:
 | `GET /api/market/overview` | `useMarketOverview`   | Returns `totalJobs`, `averageSalary`, `remoteDistribution`, `topRoles` (with `avgSalary`), `topSkills`, `skillCategoryBreakdown` (top 5 skills per category with count and percentage) |
 | `GET /api/countries`       | `useCountries`        | Returns `{ id, code, name, lastIngestedAt }[]` for filter select and freshness label                                                                                                   |
 | `GET /api/skills`          | `useSkills`           | Returns all skills ordered by category + name. Public, no auth required                                                                                                                |
-| `GET /api/profile/skills`  | `useUserSkills`       | Returns `{ skillIds: string[] }` for the authenticated user. `enabled: isAuthenticated` prevents fetch when not logged in                                                              |
-| `PUT /api/profile/skills`  | `useUpdateUserSkills` | Replaces user's skills. Optimistic update via `onMutate` + `setQueryData` — no refetch. `onError` rollback restores previous cache                                                    |
+| `GET /api/profile/skills`  | `useUserSkills`       | Returns `{ skills: UserSkill[] }` (`UserSkill = { skillId, level }`). `enabled: isAuthenticated` prevents fetch when not logged in                                                    |
+| `PUT /api/profile/skills`  | `useUpdateUserSkills` | Replaces user's skills with proficiency levels. Body: `{ skills: UserSkill[] }`. Optimistic update via `onMutate` + `setQueryData` — no refetch. `onError` rollback restores cache   |
 | `GET /auth/me`             | `useAuth`             | Returns `{ sub, provider, email, name, picture }` if authenticated, 401 otherwise. Called on app load to restore session from the `ds_auth` httpOnly cookie                           |
 | `POST /auth/logout`        | (direct fetch)        | Clears the `ds_auth` cookie. Called from `AuthStatus` on sign-out click, then query cache is cleared                                                                                  |
 
@@ -297,12 +297,13 @@ The `ProfilePage` displays the `SkillSelector` component for authenticated users
 **SkillSelector**
 
 - Groups skills by category using a pure `groupByCategory()` function (frontend reduce, not backend endpoint)
-- Pill-based toggle buttons in a responsive grid (`2→3→4→6` columns)
-- `aria-pressed` for accessibility — screen readers announce toggle state
-- Selected style: indigo accent (`border-(--indigo) text-(--indigo) bg-(--indigo)/10`) — subtle, not harsh inverted colors
-- Immediate toggle: click updates local `selectedIds` + fires `mutate(newIds)` — no Save button
+- Pill-based buttons in a responsive grid (`2→3→4→6` columns). Click **cycles** through levels: OFF → BASIC → INTERMEDIATE → ADVANCED → OFF
+- `aria-pressed` for accessibility; `data-level` attribute for test assertions
+- State: `Map<string, SkillLevel>` — key is skillId, value is current level. Replaces the previous `string[]`
+- Level styles: BASIC (muted indigo border + bg), INTERMEDIATE (solid indigo border), ADVANCED (solid + `font-medium`). Animated bottom bar: `w-1/3` / `w-2/3` / `w-full` per level. Fixed `h-10` height so the button never reflows when the bar appears.
+- Layout: bordered blocks per category (`md:border-x border-b border-border`), `px-8` inset for label and pill grid
 - **Optimistic update**: `useUpdateUserSkills` uses `onMutate` with `setQueryData` to write directly to the React Query cache. No `invalidateQueries`, no refetch after PUT
-- **Double rollback on error**: both the React Query cache (`onError` in the mutation hook) and the component's local `selectedIds` state (`onError` callback in `mutate()`) are restored to their previous values
+- **Double rollback on error**: both the React Query cache (`onError` in the mutation hook) and the component's local `Map` state (`onError` callback in `mutate()`) are restored to their previous values
 - **Scramble text feedback**: `useScrambleText` hook provides a character-by-character decode animation. Phases: hidden → scrambling (30ms/char) → visible (3s) → fading (500ms CSS transition) → hidden. Green text for "added", muted for "removed"
 
 **AuthStatus (v0.7 redesign)**

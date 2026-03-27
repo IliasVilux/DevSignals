@@ -16,9 +16,9 @@ It does **not** show job listings; it aggregates external job data and turns it 
 - `frontend/` – React + TypeScript + Vite + TanStack Query + Recharts
 - `docs/` – project context and architecture notes
 
-## Current Phase – MVP v0.7 in progress
+## Current Phase – MVP v0.7 complete ✅
 
-MVP v0.6 added social OAuth authentication (Google + GitHub) with stateless JWT in an httpOnly cookie. MVP v0.7 adds user persistence in the database, a profile page where users select their skills, and optimistic updates with cache management via React Query. Next: skill proficiency levels (BASIC/INTERMEDIATE/ADVANCED), then match scoring in v0.8.
+MVP v0.6 added social OAuth authentication (Google + GitHub) with stateless JWT in an httpOnly cookie. MVP v0.7 adds user persistence in the database, a profile page where users can select skills with proficiency levels (BASIC/INTERMEDIATE/ADVANCED), and optimistic updates with cache management via React Query. Next: personal match scoring in v0.8.
 
 ### Backend
 
@@ -47,13 +47,13 @@ MVP v0.6 added social OAuth authentication (Google + GitHub) with stateless JWT 
 - **SkillCategoryBreakdown**: per-category sections with desktop chart + mobile list
 - **Auth (v0.6)**: `AuthContext` + `useAuth` hook restore session on load via `GET /auth/me`
 - **AuthStatus (v0.7)**: desktop DropdownMenu + mobile Sheet with navigation (Market, Profile) and sign-out. lucide-react icons for UI, custom SVGs for brand logos
-- **Profile (v0.7)**: `ProfilePage` with `SkillSelector` — pill-based toggle grouped by category, optimistic updates via `onMutate` + `setQueryData` (no refetch after PUT), rollback on error (both React Query cache and local component state), scramble text animation for feedback notifications
+- **Profile (v0.7)**: `ProfilePage` with `SkillSelector` — pill-based skill selector grouped by category. Click cycles OFF → BASIC → INTERMEDIATE → ADVANCED → OFF. Animated level bar (w-1/3 / w-2/3 / w-full) per level. Optimistic updates via `onMutate` + `setQueryData` (no refetch after PUT), rollback on error (both React Query cache and local `Map<string, SkillLevel>` state), scramble text animation for feedback notifications
 
 ### Profile API (v0.7)
 
 - `GET /api/skills` – returns all skills ordered by category + name (public, no auth)
-- `GET /api/profile/skills` – returns `{ skillIds: string[] }` for the authenticated user
-- `PUT /api/profile/skills` – replaces user's skills atomically. Body: `{ skillIds: string[] }`
+- `GET /api/profile/skills` – returns `{ skills: { skillId, level }[] }` for the authenticated user (`level`: `BASIC` | `INTERMEDIATE` | `ADVANCED`)
+- `PUT /api/profile/skills` – replaces user's skills atomically. Body: `{ skills: { skillId, level }[] }`
 
 ### Auth API (v0.6)
 
