@@ -95,51 +95,54 @@ describe("UsersRepository", () => {
     });
   });
 
-  describe("getUserSkillIds", () => {
-    it("returns skill IDs for a user", async () => {
+  describe("getUserSkills", () => {
+    it("returns skills with levels for a user", async () => {
       vi.mocked(prisma.userSkill.findMany).mockResolvedValue([
-        { userId: "user1", skillId: "skill_ts" },
-        { userId: "user1", skillId: "skill_react" },
+        { userId: "user1", skillId: "skill_ts", level: "BASIC" },
+        { userId: "user1", skillId: "skill_react", level: "INTERMEDIATE" },
       ]);
 
-      const result = await repo.getUserSkillIds("user1");
+      const result = await repo.getUserSkills("user1");
 
       expect(prisma.userSkill.findMany).toHaveBeenCalledWith({
         where: { userId: "user1" },
-        select: { skillId: true },
+        select: { skillId: true, level: true },
       });
-      expect(result).toEqual(["skill_ts", "skill_react"]);
+      expect(result).toEqual([
+        { skillId: "skill_ts", level: "BASIC" },
+        { skillId: "skill_react", level: "INTERMEDIATE" },
+      ]);
     });
 
     it("returns empty array when user has no skills", async () => {
       vi.mocked(prisma.userSkill.findMany).mockResolvedValue([]);
 
-      const result = await repo.getUserSkillIds("user_no_skills");
+      const result = await repo.getUserSkills("user_no_skills");
 
       expect(result).toEqual([]);
     });
   });
 
   describe("replaceUserSkills", () => {
-    it("deletes existing skills and creates new ones in a transaction", async () => {
+    it("deletes existing skills and creates new ones with levels in a transaction", async () => {
       vi.mocked(prisma.$transaction).mockResolvedValue([
         { count: 2 },
         { count: 3 },
       ]);
 
       await repo.replaceUserSkills("user1", [
-        "skill_ts",
-        "skill_react",
-        "skill_node",
+        { skillId: "skill_ts", level: "BASIC" },
+        { skillId: "skill_react", level: "INTERMEDIATE" },
+        { skillId: "skill_node", level: "ADVANCED" },
       ]);
 
       expect(prisma.$transaction).toHaveBeenCalledWith([
         prisma.userSkill.deleteMany({ where: { userId: "user1" } }),
         prisma.userSkill.createMany({
           data: [
-            { userId: "user1", skillId: "skill_ts" },
-            { userId: "user1", skillId: "skill_react" },
-            { userId: "user1", skillId: "skill_node" },
+            { userId: "user1", skillId: "skill_ts", level: "BASIC" },
+            { userId: "user1", skillId: "skill_react", level: "INTERMEDIATE" },
+            { userId: "user1", skillId: "skill_node", level: "ADVANCED" },
           ],
         }),
       ]);

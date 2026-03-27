@@ -8,8 +8,8 @@ export class ProfileController {
   async getProfileSkills(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.user!.sub;
-      const skillIds = await this.usersRepository.getUserSkillIds(userId);
-      res.json({ skillIds });
+      const skills = await this.usersRepository.getUserSkills(userId);
+      res.json({ skills });
     } catch {
       res.status(500).json({ error: "Failed to fetch profile skills" });
     }
@@ -18,8 +18,8 @@ export class ProfileController {
   async updateProfileSkills(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.user!.sub;
-      const { skillIds } = req.body as UpdateSkillsBody;
-      await this.usersRepository.replaceUserSkills(userId, skillIds);
+      const { skills } = req.body as UpdateSkillsBody;
+      await this.usersRepository.replaceUserSkills(userId, skills);
       res.json({ message: "Skills updated" });
     } catch {
       res.status(500).json({ error: "Failed to update profile skills" });

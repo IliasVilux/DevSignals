@@ -1,11 +1,11 @@
 import { User } from "../../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
-import { UpsertUserData } from "./users.types";
+import { UpsertUserData, SkillWithLevel } from "./users.types";
 
 export interface IUsersRepository {
   upsert(data: UpsertUserData): Promise<User>;
-  getUserSkillIds(userId: string): Promise<string[]>;
-  replaceUserSkills(userId: string, skillIds: string[]): Promise<void>;
+  getUserSkills(userId: string): Promise<SkillWithLevel[]>;
+  replaceUserSkills(userId: string, skills: SkillWithLevel[]): Promise<void>;
 }
 
 export class UsersRepository implements IUsersRepository {
@@ -32,20 +32,27 @@ export class UsersRepository implements IUsersRepository {
     });
   }
 
-  async getUserSkillIds(userId: string): Promise<string[]> {
+  async getUserSkills(userId: string): Promise<SkillWithLevel[]> {
     const rows = await prisma.userSkill.findMany({
       where: { userId },
-      select: { skillId: true },
+      select: { skillId: true, level: true },
     });
 
-    return rows.map((r) => r.skillId);
+    return rows.map((r) => ({ skillId: r.skillId, level: r.level }));
   }
 
-  async replaceUserSkills(userId: string, skillIds: string[]): Promise<void> {
+  async replaceUserSkills(
+    userId: string,
+    skills: SkillWithLevel[]
+  ): Promise<void> {
     await prisma.$transaction([
       prisma.userSkill.deleteMany({ where: { userId } }),
       prisma.userSkill.createMany({
-        data: skillIds.map((skillId) => ({ userId, skillId })),
+        data: skills.map((skill) => ({
+          userId,
+          skillId: skill.skillId,
+          level: skill.level,
+        })),
       }),
     ]);
   }

@@ -3,6 +3,7 @@ import { ProfileController } from "../../../modules/profile/profile.controller";
 import type { IUsersRepository } from "../../../modules/users/users.repository";
 import type { Request, Response } from "express";
 import type { JwtPayload } from "../../../modules/auth/auth.types";
+import type { SkillWithLevel } from "../../../modules/users/users.types";
 
 const mockUser: JwtPayload = {
   sub: "cuid_abc123",
@@ -16,7 +17,7 @@ const mockUser: JwtPayload = {
 
 const mockRepository = (): IUsersRepository => ({
   upsert: vi.fn(),
-  getUserSkillIds: vi.fn(),
+  getUserSkills: vi.fn(),
   replaceUserSkills: vi.fn(),
 });
 
@@ -41,32 +42,35 @@ describe("ProfileController", () => {
   });
 
   describe("getProfileSkills", () => {
-    it("returns skillIds for the authenticated user", async () => {
-      const skillIds = ["skill1", "skill2"];
-      vi.mocked(repo.getUserSkillIds).mockResolvedValue(skillIds);
+    it("returns skills for the authenticated user", async () => {
+      const skills: SkillWithLevel[] = [
+        { skillId: "skill1", level: "BASIC" },
+        { skillId: "skill2", level: "INTERMEDIATE" },
+      ];
+      vi.mocked(repo.getUserSkills).mockResolvedValue(skills);
 
       const req = mockReq();
       const res = mockRes();
 
       await controller.getProfileSkills(req, res);
 
-      expect(repo.getUserSkillIds).toHaveBeenCalledWith("cuid_abc123");
-      expect(res.json).toHaveBeenCalledWith({ skillIds });
+      expect(repo.getUserSkills).toHaveBeenCalledWith("cuid_abc123");
+      expect(res.json).toHaveBeenCalledWith({ skills });
     });
 
     it("returns empty array when user has no skills", async () => {
-      vi.mocked(repo.getUserSkillIds).mockResolvedValue([]);
+      vi.mocked(repo.getUserSkills).mockResolvedValue([]);
 
       const req = mockReq();
       const res = mockRes();
 
       await controller.getProfileSkills(req, res);
 
-      expect(res.json).toHaveBeenCalledWith({ skillIds: [] });
+      expect(res.json).toHaveBeenCalledWith({ skills: [] });
     });
 
     it("returns 500 when repository throws", async () => {
-      vi.mocked(repo.getUserSkillIds).mockRejectedValue(new Error("DB error"));
+      vi.mocked(repo.getUserSkills).mockRejectedValue(new Error("DB error"));
 
       const req = mockReq();
       const res = mockRes();
@@ -84,22 +88,26 @@ describe("ProfileController", () => {
     it("replaces user skills and returns success message", async () => {
       vi.mocked(repo.replaceUserSkills).mockResolvedValue(undefined);
 
-      const req = mockReq({ body: { skillIds: ["skill1", "skill2"] } });
+      const skills: SkillWithLevel[] = [
+        { skillId: "skill1", level: "BASIC" },
+        { skillId: "skill2", level: "ADVANCED" },
+      ];
+      const req = mockReq({ body: { skills } });
       const res = mockRes();
 
       await controller.updateProfileSkills(req, res);
 
-      expect(repo.replaceUserSkills).toHaveBeenCalledWith("cuid_abc123", [
-        "skill1",
-        "skill2",
-      ]);
+      expect(repo.replaceUserSkills).toHaveBeenCalledWith(
+        "cuid_abc123",
+        skills
+      );
       expect(res.json).toHaveBeenCalledWith({ message: "Skills updated" });
     });
 
     it("replaces user skills with empty array (clears all skills)", async () => {
       vi.mocked(repo.replaceUserSkills).mockResolvedValue(undefined);
 
-      const req = mockReq({ body: { skillIds: [] } });
+      const req = mockReq({ body: { skills: [] } });
       const res = mockRes();
 
       await controller.updateProfileSkills(req, res);
@@ -113,7 +121,9 @@ describe("ProfileController", () => {
         new Error("DB error")
       );
 
-      const req = mockReq({ body: { skillIds: ["skill1"] } });
+      const req = mockReq({
+        body: { skills: [{ skillId: "skill1", level: "BASIC" }] },
+      });
       const res = mockRes();
 
       await controller.updateProfileSkills(req, res);

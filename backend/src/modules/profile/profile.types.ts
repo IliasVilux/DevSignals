@@ -1,3 +1,5 @@
+import { SkillWithLevel } from "../users/users.types";
+
 export interface UpdateSkillsBody {
-  skillIds: string[];
+  skills: SkillWithLevel[];
 }
