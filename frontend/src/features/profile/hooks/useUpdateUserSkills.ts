@@ -6,8 +6,13 @@ export function useUpdateUserSkills() {
 
     return useMutation({
         mutationFn: (skillIds: string[]) => updateUserSkills(skillIds),
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ["profile", "skills"] })
+        onMutate: (skillIds) => {
+            const previous = queryClient.getQueryData(["profile", "skills"])
+            queryClient.setQueryData(["profile", "skills"], { skillIds })
+            return { previous }
+        },
+        onError: (_err, _vars, context) => {
+            queryClient.setQueryData(["profile", "skills"], context?.previous)
         },
     })
 }

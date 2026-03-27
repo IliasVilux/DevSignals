@@ -40,7 +40,7 @@ export function MarketOverviewPage() {
             {/* Main content */}
             <main className="max-w-6xl mx-auto">
                 {isLoading && (
-                    <div aria-live="polite" className="animate-pulse">
+                    <div aria-live="polite">
                         <span className="sr-only">fetching market data</span>
                         <div className="grid grid-cols-1 md:grid-cols-3">
                             <div className="flex flex-col divide-y divide-border border-x border-b md:border-r border-border">
@@ -82,6 +82,7 @@ export function MarketOverviewPage() {
                         </div>
                     </div>
                 )}
+
                 {isError && (
                     <div className="px-6 md:px-0 py-16 flex flex-col items-center gap-4 text-center">
                         <p className="text-xs text-destructive tracking-widest uppercase">
@@ -98,6 +99,7 @@ export function MarketOverviewPage() {
                         </button>
                     </div>
                 )}
+
                 {data && data.totalJobs === 0 && (
                     <div className="px-6 md:px-0 py-16 text-center">
                         <p className="text-xs text-muted-foreground tracking-widest uppercase">
