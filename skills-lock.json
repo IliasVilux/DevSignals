@@ -20,6 +20,11 @@
       "source": "millionco/react-doctor",
       "sourceType": "github",
       "computedHash": "276053f3861a6f29e2ab1922fc91281934dac5be78f85ec9f21604fd979383ee"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "9fb08ab39585f6f770d0c1c735f83e619aba2089d7ad50ba2a305eff715e08b9"
     }
   }
 }
