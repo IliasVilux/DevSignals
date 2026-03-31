@@ -173,7 +173,7 @@ The `MarketOverviewPage` orchestrates the dashboard:
 
 **Filters** (`MarketFilters`)
 
-- Country dropdown populated dynamically from `GET /api/countries`
+- Country dropdown populated dynamically from `GET /api/countries`. `countriesByCode` Map memoized with `useMemo([data])` for O(1) lookup by code
 - Role text input with debounce via `useDebounce`
 - Data freshness label: shows how long ago the selected country was last ingested (e.g. "data from 3 hours ago"). When no country is selected, shows the most recently ingested country's timestamp. Computed by `formatLastIngested()` — a pure function, no external library.
 
@@ -299,7 +299,7 @@ The `ProfilePage` displays the `SkillSelector` component for authenticated users
 - Groups skills by category using a pure `groupByCategory()` function (frontend reduce, not backend endpoint)
 - Pill-based buttons in a responsive grid (`2→3→4→6` columns). Click **cycles** through levels: OFF → BASIC → INTERMEDIATE → ADVANCED → OFF
 - `aria-pressed` for accessibility; `data-level` attribute for test assertions
-- State: `Map<string, SkillLevel>` — key is skillId, value is current level. Replaces the previous `string[]`
+- State: `Map<string, SkillLevel>` — key is skillId, value is current level. `skillsById` and `byCategory` memoized with `useMemo([skills])` for O(1) lookups
 - Level styles: BASIC (muted indigo border + bg), INTERMEDIATE (solid indigo border), ADVANCED (solid + `font-medium`). Animated bottom bar: `w-1/3` / `w-2/3` / `w-full` per level. Fixed `h-10` height so the button never reflows when the bar appears.
 - Layout: bordered blocks per category (`md:border-x border-b border-border`), `px-8` inset for label and pill grid
 - **Optimistic update**: `useUpdateUserSkills` uses `onMutate` with `setQueryData` to write directly to the React Query cache. No `invalidateQueries`, no refetch after PUT
