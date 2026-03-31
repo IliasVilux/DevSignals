@@ -1,3 +1,4 @@
+import { useMemo } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { Link } from "react-router-dom"
 import { LogOutIcon, MenuIcon, XIcon, BarChart2Icon, UserIcon } from "lucide-react"
@@ -27,6 +28,19 @@ const VITE_API_URL = import.meta.env.VITE_API_URL as string
 export function AuthStatus() {
     const { user, isLoading, isAuthenticated } = useAuthContext()
     const queryClient = useQueryClient()
+    const providerBadge = useMemo(
+        () => (
+            <span className="absolute -bottom-1 -right-1 flex items-center justify-center bg-background border border-border size-3.5">
+                {
+                    {
+                        google: <Google width={9} height={9} style={{ color: "var(--indigo)" }} />,
+                        github: <GitHub width={9} height={9} style={{ color: "var(--indigo)" }} />,
+                    }[user?.provider as string]
+                }
+            </span>
+        ),
+        [user?.provider]
+    )
 
     async function handleLogout() {
         await fetch(`${VITE_API_URL}/auth/logout`, {
@@ -68,17 +82,6 @@ export function AuthStatus() {
             </div>
         )
     }
-
-    const providerBadge = (
-        <span className="absolute -bottom-1 -right-1 flex items-center justify-center bg-background border border-border size-3.5">
-            {
-                {
-                    google: <Google width={9} height={9} style={{ color: "var(--indigo)" }} />,
-                    github: <GitHub width={9} height={9} style={{ color: "var(--indigo)" }} />,
-                }[user?.provider as string]
-            }
-        </span>
-    )
 
     return (
         <>
@@ -164,26 +167,7 @@ export function AuthStatus() {
                                         {user?.name?.[0]?.toUpperCase()}
                                     </AvatarFallback>
                                 </Avatar>
-                                <span className="absolute -bottom-1 -right-1 flex items-center justify-center bg-background border border-border size-3.5">
-                                    {
-                                        {
-                                            google: (
-                                                <Google
-                                                    width={9}
-                                                    height={9}
-                                                    style={{ color: "var(--indigo)" }}
-                                                />
-                                            ),
-                                            github: (
-                                                <GitHub
-                                                    width={9}
-                                                    height={9}
-                                                    style={{ color: "var(--indigo)" }}
-                                                />
-                                            ),
-                                        }[user?.provider as string]
-                                    }
-                                </span>
+                                {providerBadge}
                             </div>
                             <span className="text-xs text-muted-foreground tracking-wide truncate max-w-36 capitalize">
                                 {user?.name}

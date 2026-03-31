@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import type { Skill, UserSkill, SkillLevel } from "@/shared/api/types"
 import { useUpdateUserSkills } from "../hooks"
 import { useScrambleText } from "../hooks/useScrambleText"
@@ -6,22 +6,6 @@ import { useScrambleText } from "../hooks/useScrambleText"
 type Props = {
     skills: Skill[]
     userSkills?: UserSkill[]
-}
-
-const LEVELS: SkillLevel[] = ["BASIC", "INTERMEDIATE", "ADVANCED"]
-
-const levelStyle: Record<SkillLevel, string> = {
-    BASIC: "border border-(--indigo)/50 text-(--indigo)/70 bg-(--indigo)/5 hover:bg-(--indigo)/10",
-    INTERMEDIATE:
-        "border border-(--indigo) text-(--indigo) bg-(--indigo)/10 hover:bg-(--indigo)/20",
-    ADVANCED:
-        "border border-(--indigo) text-(--indigo) bg-(--indigo)/20 hover:bg-(--indigo)/30 font-medium",
-}
-
-const levelBarWidth: Record<SkillLevel, string> = {
-    BASIC: "w-1/3",
-    INTERMEDIATE: "w-2/3",
-    ADVANCED: "w-full",
 }
 
 function groupByCategory(skills: Skill[]) {
@@ -35,8 +19,23 @@ function groupByCategory(skills: Skill[]) {
     )
 }
 
+const LEVELS: SkillLevel[] = ["BASIC", "INTERMEDIATE", "ADVANCED"]
+const levelStyle: Record<SkillLevel, string> = {
+    BASIC: "border border-(--indigo)/50 text-(--indigo)/70 bg-(--indigo)/5 hover:bg-(--indigo)/10",
+    INTERMEDIATE:
+        "border border-(--indigo) text-(--indigo) bg-(--indigo)/10 hover:bg-(--indigo)/20",
+    ADVANCED:
+        "border border-(--indigo) text-(--indigo) bg-(--indigo)/20 hover:bg-(--indigo)/30 font-medium",
+}
+const levelBarWidth: Record<SkillLevel, string> = {
+    BASIC: "w-1/3",
+    INTERMEDIATE: "w-2/3",
+    ADVANCED: "w-full",
+}
+
 export function SkillSelector({ skills, userSkills }: Props) {
-    const byCategory = groupByCategory(skills)
+    const byCategory = useMemo(() => groupByCategory(skills), [skills])
+    const skillsById = useMemo(() => new Map(skills.map((s) => [s.id, s])), [skills])
     const [selectedSkills, setSelectedSkills] = useState<Map<string, SkillLevel>>(
         () => new Map((userSkills || []).map((us) => [us.skillId, us.level]))
     )
@@ -45,7 +44,7 @@ export function SkillSelector({ skills, userSkills }: Props) {
     const { displayText, phase, trigger } = useScrambleText()
 
     function cycle(id: string) {
-        const skill = skills.find((s) => s.id === id)
+        const skill = skillsById.get(id)
         const current = selectedSkills.get(id)
         const currentIndex = current !== undefined ? LEVELS.indexOf(current) : -1
         const next = LEVELS[currentIndex + 1]

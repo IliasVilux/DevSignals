@@ -1,3 +1,4 @@
+import { useMemo } from "react"
 import { ChevronDown } from "lucide-react"
 import { useCountries } from "../hooks"
 
@@ -22,7 +23,8 @@ function formatLastIngested(isoDate: string | null): string | null {
 export function MarketFilters({ countryCode, role, onCountryChange, onRoleChange }: Props) {
     const { data, isLoading } = useCountries()
 
-    const selectedCountry = data?.find((c) => c.code === countryCode)
+    const countriesByCode = useMemo(() => new Map(data?.map((c) => [c.code, c]) ?? []), [data])
+    const selectedCountry = countryCode ? countriesByCode.get(countryCode) : undefined
 
     const freshnessDate = selectedCountry
         ? selectedCountry.lastIngestedAt
