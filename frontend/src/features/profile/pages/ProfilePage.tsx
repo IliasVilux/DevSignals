@@ -3,6 +3,8 @@ import { Skeleton } from "@/shared/ui/skeleton"
 import { useSkills, useUserSkills } from "../hooks"
 import { SkillSelector } from "../components/SkillSelector"
 
+const SKELETON_CATEGORY_WIDTHS = ["w-20", "w-28", "w-16"]
+
 export function ProfilePage() {
     const {
         data: allSkills,
@@ -14,6 +16,7 @@ export function ProfilePage() {
         data: userSkills,
         isLoading: userSkillsLoading,
         isError: userSkillsIsError,
+        refetch: refetchUserSkills,
     } = useUserSkills()
 
     const isLoading = allSkillsLoading || userSkillsLoading
@@ -39,14 +42,14 @@ export function ProfilePage() {
                             <Skeleton className="h-7 w-48" />
                         </div>
                         {/* Category skeletons */}
-                        {[1, 2, 3].map((i) => (
-                            <div key={i} className="md:border-x border-b border-border">
+                        {SKELETON_CATEGORY_WIDTHS.map((width) => (
+                            <div key={width} className="md:border-x border-b border-border">
                                 <div className="px-8 pt-5 pb-3">
-                                    <Skeleton className="h-3 w-20" />
+                                    <Skeleton className={`h-3 ${width}`} />
                                 </div>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 px-8 pb-6">
-                                    {Array.from({ length: 6 }).map((_, j) => (
-                                        <Skeleton key={j} className="h-10" />
+                                    {[1, 2, 3, 4, 5, 6].map((m) => (
+                                        <Skeleton key={m} className="h-10" />
                                     ))}
                                 </div>
                             </div>
@@ -60,7 +63,10 @@ export function ProfilePage() {
                             failed to load profile
                         </p>
                         <button
-                            onClick={() => refetchSkills()}
+                            onClick={() => {
+                                refetchSkills()
+                                refetchUserSkills()
+                            }}
                             className="text-xs tracking-widest uppercase border border-border px-5 py-2 hover:bg-accent transition-colors cursor-pointer"
                         >
                             retry
