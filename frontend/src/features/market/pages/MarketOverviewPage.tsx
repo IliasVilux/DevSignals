@@ -11,6 +11,13 @@ import { useDebounce } from "@/shared/hooks"
 import { Skeleton } from "@/shared/ui/skeleton"
 import { AppHeader } from "@/shared/ui/AppHeader"
 
+const SKELETON_STATS_WIDTHS = [
+    ["w-16", "w-24"],
+    ["w-18", "w-20"],
+]
+const SKELETON_CHARTS_WIDTHS = ["w-20", "w-24"]
+const SKELETON_BOTTOM_WIDTHS = ["w-20", "w-24", "w-16"]
+
 export function MarketOverviewPage() {
     const [countryCode, setCountryCode] = useState<string | undefined>(undefined)
     const [role, setRole] = useState<string>("")
@@ -43,42 +50,35 @@ export function MarketOverviewPage() {
                     <div aria-live="polite">
                         <span className="sr-only">fetching market data</span>
                         <div className="grid grid-cols-1 md:grid-cols-3">
-                            <div className="flex flex-col divide-y divide-border border-x border-b md:border-r border-border">
-                                <div className="px-8 py-6 space-y-3">
-                                    <Skeleton className="h-2.5 w-16" />
-                                    <Skeleton className="h-9 w-20" />
-                                </div>
-                                <div className="px-8 py-6 space-y-3">
-                                    <Skeleton className="h-2.5 w-16" />
-                                    <Skeleton className="h-9 w-24" />
-                                </div>
+                            <div className="flex flex-col divide-y divide-border md:border-x border-b md:border-r border-border">
+                                {SKELETON_STATS_WIDTHS.map(([w1, w2]) => (
+                                    <div key={w1} className="px-8 py-6 space-y-3">
+                                        <Skeleton className={`h-2.5 ${w1}`} />
+                                        <Skeleton className={`h-9 ${w2}`} />
+                                    </div>
+                                ))}
                             </div>
-                            <div className="col-span-1 md:col-span-2 px-8 py-6 border-x md:border-l-0 border-b border-border space-y-3">
+                            <div className="col-span-1 md:col-span-2 px-8 py-6 md:border-x md:border-l-0 border-b border-border space-y-3">
                                 <Skeleton className="h-2.5 w-32" />
                                 <Skeleton className="h-36" />
                             </div>
                         </div>
-                        <div className="px-8 py-6 border-x border-b border-border space-y-3">
-                            <Skeleton className="h-2.5 w-20" />
-                            <Skeleton className="h-44" />
-                        </div>
-                        <div className="px-8 py-6 border-x border-b border-border space-y-3">
-                            <Skeleton className="h-2.5 w-20" />
-                            <Skeleton className="h-44" />
-                        </div>
-                        <div className="px-8 py-6 md:border-x border-t border-border mt-12">
-                            <div className="space-y-3 mb-8">
-                                <Skeleton className="h-2.5 w-20" />
+                        {SKELETON_CHARTS_WIDTHS.map((width) => (
+                            <div
+                                key={width}
+                                className="px-8 py-6 md:border-x border-b border-border space-y-3"
+                            >
+                                <Skeleton className={`h-2.5 ${width}`} />
                                 <Skeleton className="h-44" />
                             </div>
-                            <div className="space-y-3 mb-8">
-                                <Skeleton className="h-2.5 w-24" />
-                                <Skeleton className="h-36" />
-                            </div>
-                            <div className="space-y-3">
-                                <Skeleton className="h-2.5 w-16" />
-                                <Skeleton className="h-28" />
-                            </div>
+                        ))}
+                        <div className="px-8 py-6 md:border-x border-t border-border mt-12">
+                            {SKELETON_BOTTOM_WIDTHS.map((width) => (
+                                <div key={width} className="space-y-3 mb-8">
+                                    <Skeleton className={`h-2.5 ${width}`} />
+                                    <Skeleton className="h-44" />
+                                </div>
+                            ))}
                         </div>
                     </div>
                 )}
@@ -128,7 +128,7 @@ export function MarketOverviewPage() {
                                     <p className="text-xs text-muted-foreground tracking-widest uppercase">
                                         avg. salary
                                     </p>
-                                    <p className="text-4xl font-mono font-semibold tracking-tight">
+                                    <p className="text-4xl font-semibold tracking-tight">
                                         {data.averageSalary
                                             ? `$${Math.round(data.averageSalary).toLocaleString()}`
                                             : "—"}
