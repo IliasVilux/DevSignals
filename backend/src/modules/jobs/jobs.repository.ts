@@ -1,12 +1,17 @@
 import { prisma } from "../../lib/prisma";
 import { MarketOverviewFilters } from "../market/market.types";
 import {
+  JobStats,
   NormalizedJob,
   SkillCategoryBreakdown,
   TopRoles,
   TopSkill,
 } from "./jobs.types";
-import { Job, SkillCategory } from "../../../generated/prisma/client";
+import {
+  Job,
+  RemoteType,
+  SkillCategory,
+} from "../../../generated/prisma/client";
 import {
   getTopRoles,
   getTopSkills,
@@ -14,7 +19,7 @@ import {
 } from "../../../generated/prisma/sql";
 
 export interface IJobsRepository {
-  findJobs(filters?: MarketOverviewFilters): Promise<Job[]>;
+  findJobStats(filters: MarketOverviewFilters): Promise<JobStats>;
   findTopRoles(
     filters: MarketOverviewFilters,
     limit: number
@@ -113,20 +118,52 @@ export class JobsRepository implements IJobsRepository {
     });
   }
 
-  async findJobs(filters: MarketOverviewFilters): Promise<Job[]> {
-    return prisma.job.findMany({
-      where: {
-        country: filters.countryCode
-          ? { code: filters.countryCode.toUpperCase() }
-          : undefined,
-        role: filters.role
-          ? { contains: filters.role.toLowerCase(), mode: "insensitive" }
-          : undefined,
-      },
-      include: {
-        country: true,
-      },
-    });
+  async findJobStats(filters: MarketOverviewFilters): Promise<JobStats> {
+    const where = {
+      country: filters.countryCode
+        ? { code: filters.countryCode.toUpperCase() }
+        : undefined,
+      role: filters.role
+        ? { contains: filters.role.toLowerCase(), mode: "insensitive" as const }
+        : undefined,
+    };
+
+    const [totalJobs, salaryAgg, remoteGroups] = await Promise.all([
+      prisma.job.count({ where }),
+      prisma.job.aggregate({
+        where,
+        _avg: { salaryMin: true, salaryMax: true },
+      }),
+      prisma.job.groupBy({ by: ["remoteType"], where, _count: { _all: true } }),
+    ]);
+
+    const avgMin = salaryAgg._avg.salaryMin;
+    const avgMax = salaryAgg._avg.salaryMax;
+    let averageSalary: number | null = null;
+    if (avgMin !== null && avgMax !== null) {
+      averageSalary = Math.round((avgMin + avgMax) / 2);
+    } else if (avgMin !== null) {
+      averageSalary = Math.round(avgMin);
+    } else if (avgMax !== null) {
+      averageSalary = Math.round(avgMax);
+    }
+
+    const remoteMap = new Map(
+      remoteGroups.map((g) => [g.remoteType, g._count._all])
+    );
+    const remoteDistribution = {
+      hybrid: Math.round(
+        ((remoteMap.get(RemoteType.HYBRID) ?? 0) / (totalJobs || 1)) * 100
+      ),
+      remote: Math.round(
+        ((remoteMap.get(RemoteType.REMOTE) ?? 0) / (totalJobs || 1)) * 100
+      ),
+      onsite: Math.round(
+        ((remoteMap.get(RemoteType.ONSITE) ?? 0) / (totalJobs || 1)) * 100
+      ),
+    };
+
+    return { totalJobs, averageSalary, remoteDistribution };
   }
 
   async findTopRoles(

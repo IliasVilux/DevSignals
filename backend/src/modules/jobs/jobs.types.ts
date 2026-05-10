@@ -31,3 +31,13 @@ export interface SkillCategoryBreakdown {
   count: number;
   skills: TopSkill[];
 }
+
+export interface JobStats {
+  totalJobs: number;
+  averageSalary: number | null;
+  remoteDistribution: {
+    hybrid: number;
+    remote: number;
+    onsite: number;
+  };
+}

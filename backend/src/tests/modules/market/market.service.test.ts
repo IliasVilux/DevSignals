@@ -1,49 +1,14 @@
 import { describe, it, expect, vi } from "vitest";
 import { MarketService } from "../../../modules/market/market.service";
-import { RemoteType, SkillCategory } from "../../../../generated/prisma/client";
+import { SkillCategory } from "../../../../generated/prisma/client";
 
 describe("MarketService", () => {
-  const mockJobs = [
-    {
-      id: "1",
-      externalId: "ext1",
-      role: "Frontend Dev",
-      company: "Company A",
-      salaryMin: 50000,
-      salaryMax: 70000,
-      remoteType: RemoteType.REMOTE,
-      postedAt: new Date(),
-      countryId: "country1",
-      createdAt: new Date(),
-    },
-    {
-      id: "2",
-      externalId: "ext2",
-      role: "Backend Dev",
-      company: "Company B",
-      salaryMin: 60000,
-      salaryMax: 80000,
-      remoteType: RemoteType.HYBRID,
-      postedAt: new Date(),
-      countryId: "country1",
-      createdAt: new Date(),
-    },
-    {
-      id: "3",
-      externalId: "ext3",
-      role: "DevOps",
-      company: "Company C",
-      salaryMin: null,
-      salaryMax: 90000,
-      remoteType: RemoteType.ONSITE,
-      postedAt: new Date(),
-      countryId: "country1",
-      createdAt: new Date(),
-    },
-  ];
-
   const baseRepository = () => ({
-    findJobs: vi.fn().mockResolvedValue(mockJobs),
+    findJobStats: vi.fn().mockResolvedValue({
+      totalJobs: 3,
+      averageSalary: 73333,
+      remoteDistribution: { remote: 33, hybrid: 33, onsite: 34 },
+    }),
     findTopRoles: vi.fn().mockResolvedValue([]),
     findTopSkills: vi.fn().mockResolvedValue([]),
     findSkillCategoryBreakdown: vi.fn().mockResolvedValue([]),
@@ -52,7 +17,11 @@ describe("MarketService", () => {
   it("returns empty overview when no jobs found", async () => {
     const mockRepository = {
       ...baseRepository(),
-      findJobs: vi.fn().mockResolvedValue([]),
+      findJobStats: vi.fn().mockResolvedValue({
+        totalJobs: 0,
+        averageSalary: null,
+        remoteDistribution: { remote: 0, hybrid: 0, onsite: 0 },
+      }),
     };
     const service = new MarketService(mockRepository);
     const result = await service.getMarketOverview({});
@@ -67,39 +36,23 @@ describe("MarketService", () => {
     });
   });
 
-  it("calculates average salary correctly", async () => {
+  it("passes average salary from repository to result", async () => {
     const service = new MarketService(baseRepository());
     const result = await service.getMarketOverview({});
-
-    // Average salary = (60000 + 70000 + 90000) / 3 = 73333
     expect(result.averageSalary).toBe(73333);
   });
 
-  it("calculates remote distribution correctly", async () => {
-    const extendedMockJobs = [
-      ...mockJobs,
-      {
-        id: "4",
-        externalId: "ext4",
-        role: "DevOps",
-        company: "Company D",
-        salaryMin: 50000,
-        salaryMax: 60000,
-        remoteType: RemoteType.REMOTE,
-        postedAt: new Date(),
-        countryId: "country1",
-        createdAt: new Date(),
-      },
-    ];
+  it("passes remote distribution from repository to result", async () => {
     const mockRepository = {
       ...baseRepository(),
-      findJobs: vi.fn().mockResolvedValue(extendedMockJobs),
+      findJobStats: vi.fn().mockResolvedValue({
+        totalJobs: 4,
+        averageSalary: 65000,
+        remoteDistribution: { remote: 50, hybrid: 25, onsite: 25 },
+      }),
     };
-
     const service = new MarketService(mockRepository);
     const result = await service.getMarketOverview({});
-
-    // Remote: 2/4, Hybrid: 1/4, OnSite: 1/4
     expect(result.remoteDistribution).toEqual({
       remote: 50,
       hybrid: 25,

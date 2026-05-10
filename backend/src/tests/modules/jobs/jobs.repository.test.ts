@@ -22,6 +22,9 @@ vi.mock("../../../lib/prisma", () => ({
     job: {
       createMany: vi.fn(),
       findMany: vi.fn(),
+      count: vi.fn(),
+      aggregate: vi.fn(),
+      groupBy: vi.fn(),
     },
     skill: {
       createMany: vi.fn(),
@@ -186,5 +189,53 @@ describe("JobsRepository", () => {
 
     expect(prisma.$queryRawTyped).toHaveBeenCalledTimes(1);
     expect(result).toHaveLength(0);
+  });
+
+  it("findJobStats returns correct totalJobs, averageSalary, and remoteDistribution", async () => {
+    vi.mocked(prisma.job.count).mockResolvedValue(4);
+    vi.mocked(prisma.job.aggregate).mockResolvedValue({
+      _avg: { salaryMin: 55000, salaryMax: 75000 },
+    } as Awaited<ReturnType<typeof prisma.job.aggregate>>);
+    vi.mocked(prisma.job.groupBy).mockResolvedValue([
+      { remoteType: RemoteType.REMOTE, _count: { _all: 2 } },
+      { remoteType: RemoteType.HYBRID, _count: { _all: 1 } },
+      { remoteType: RemoteType.ONSITE, _count: { _all: 1 } },
+    ] as Awaited<ReturnType<typeof prisma.job.groupBy>>);
+
+    const result = await repo.findJobStats({
+      countryCode: "GB",
+      role: "engineer",
+    });
+
+    expect(prisma.job.count).toHaveBeenCalledTimes(1);
+    expect(prisma.job.aggregate).toHaveBeenCalledTimes(1);
+    expect(prisma.job.groupBy).toHaveBeenCalledTimes(1);
+
+    expect(result.totalJobs).toBe(4);
+    expect(result.averageSalary).toBe(65000); // (55000 + 75000) / 2
+    expect(result.remoteDistribution).toEqual({
+      remote: 50,
+      hybrid: 25,
+      onsite: 25,
+    });
+  });
+
+  it("findJobStats returns null averageSalary when no salary data", async () => {
+    vi.mocked(prisma.job.count).mockResolvedValue(2);
+    vi.mocked(prisma.job.aggregate).mockResolvedValue({
+      _avg: { salaryMin: null, salaryMax: null },
+    } as Awaited<ReturnType<typeof prisma.job.aggregate>>);
+    vi.mocked(prisma.job.groupBy).mockResolvedValue([
+      { remoteType: RemoteType.REMOTE, _count: { _all: 2 } },
+    ] as Awaited<ReturnType<typeof prisma.job.groupBy>>);
+
+    const result = await repo.findJobStats({});
+
+    expect(result.averageSalary).toBeNull();
+    expect(result.remoteDistribution).toEqual({
+      remote: 100,
+      hybrid: 0,
+      onsite: 0,
+    });
   });
 });
