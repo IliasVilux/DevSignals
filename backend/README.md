@@ -110,7 +110,7 @@ Separation is strict: controllers and services use **typed DTOs** (e.g. `MarketO
   - **`remoteType`** – enum `ONSITE | HYBRID | REMOTE`, derived in the normalizer from job description text (e.g. “remote”, “hybrid”).
   - **Indexes:** `(countryId, role)` for filtered overview queries; `(postedAt)` for future time-based or recency logic.
 
-Salary aggregation uses `salaryMin`/`salaryMax`: when both exist we use the midpoint; otherwise we use the single value; missing salaries contribute 0 so averages reflect “jobs with salary data” only. This is an explicit product choice documented in the service logic.
+Salary aggregation uses `salaryMin`/`salaryMax`: the database computes `AVG` over each column independently; when both have data the result is the midpoint, when only one has data that value is used. SQL `AVG` ignores `NULL` rows, so jobs with no salary data do not affect the average — only jobs that have salary data are counted.
 
 ---
 
@@ -329,13 +329,14 @@ backend/
 
 5. **Service layer** – `src/modules/market/market.service.ts`
    - Checks Redis cache first (`market:overview:{cc}:{role}` key) — returns cached result immediately on hit
-   - On cache miss: fetches jobs, delegates calculations to private methods (`calculateAverageSalary`, `calculateRemoteDistribution`, `calculateSkillCategoryBreakdown`)
-   - Uses `Promise.all` to run `findTopRoles`, `findTopSkills`, and `findSkillCategoryBreakdown` in parallel
+   - On cache miss: runs all four repository calls in a single `Promise.all` — `findJobStats`, `findTopRoles`, `findTopSkills`, `findSkillCategoryBreakdown`
+   - `findJobStats` returns pre-aggregated `{ totalJobs, averageSalary, remoteDistribution }` from the database — no rows are loaded into memory
+   - `calculateSkillCategoryBreakdown` is the only private method remaining in the service; it computes the percentage share per category from the repository's count data
    - Writes result to Redis fire-and-forget after building it
    - Returns `MarketOverview`
 
 6. **Repository layer** – `src/modules/*/*.repository.ts`
-   - `JobsRepository`: `findJobs` (Prisma `findMany`), `findTopRoles`, `findTopSkills`, and `findSkillCategoryBreakdown` (all `$queryRawTyped`)
+   - `JobsRepository`: `findJobStats` (Prisma `count` + `aggregate` + `groupBy` in parallel), `findTopRoles`, `findTopSkills`, and `findSkillCategoryBreakdown` (all `$queryRawTyped`)
    - `CountriesRepository`: `getAllCountries`, `findByCode`
    - All persistence behind these interfaces
 
@@ -392,7 +393,7 @@ backend/
   Repository methods tested with Prisma mocks (or test doubles). Validates that the right queries and data shapes are used; no live DB required.
 
 - **Service** – `src/tests/modules/market/market.service.test.ts`  
-  `MarketService` receives a mock `IJobsRepository` with `findJobs` and `findTopRoles`. Tests assert: empty jobs → zero overview; salary aggregation; remote distribution; top roles from repository. All aggregation logic covered without touching the database.
+  `MarketService` receives a mock `IJobsRepository` with `findJobStats`, `findTopRoles`, `findTopSkills`, and `findSkillCategoryBreakdown`. Tests assert: empty result → zero overview; salary and remote distribution passed through from repository; top roles and skills from repository; `calculateSkillCategoryBreakdown` percentage logic. All logic covered without touching the database.
 
 ---
 
